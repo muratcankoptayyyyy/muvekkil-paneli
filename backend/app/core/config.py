@@ -1,15 +1,21 @@
 from pydantic_settings import BaseSettings
 from typing import List
+import os
 
 class Settings(BaseSettings):
     # App
     APP_NAME: str = "Koptay Müvekkil Paneli"
-    DEBUG: bool = True
+    DEBUG: bool = os.getenv("DEBUG", "False").lower() == "true"
     
     # Database
     DATABASE_URL: str
     
-    # Redis
+    # Supabase (for free deployment)
+    SUPABASE_URL: str = ""
+    SUPABASE_ANON_KEY: str = ""
+    SUPABASE_SERVICE_KEY: str = ""
+    
+    # Redis (optional for free tier)
     REDIS_URL: str = "redis://localhost:6379/0"
     
     # JWT
@@ -17,35 +23,44 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     
-    # MinIO/S3
-    MINIO_ENDPOINT: str
-    MINIO_ACCESS_KEY: str
-    MINIO_SECRET_KEY: str
+    # MinIO/S3 (for paid deployment)
+    MINIO_ENDPOINT: str = ""
+    MINIO_ACCESS_KEY: str = ""
+    MINIO_SECRET_KEY: str = ""
     MINIO_BUCKET_NAME: str = "muvekkil-documents"
     MINIO_SECURE: bool = False
     
-    # Email
-    SMTP_HOST: str
-    SMTP_PORT: int = 587
-    SMTP_USER: str
-    SMTP_PASSWORD: str
-    SMTP_FROM: str
+    # Storage Provider Selection
+    STORAGE_PROVIDER: str = "supabase"  # "supabase" or "minio"
+    SUPABASE_BUCKET_NAME: str = "documents"
     
-    # SMS
+    # Email (optional for free tier)
+    SMTP_HOST: str = ""
+    SMTP_PORT: int = 587
+    SMTP_USER: str = ""
+    SMTP_PASSWORD: str = ""
+    SMTP_FROM: str = ""
+    
+    # SMS (optional for free tier)
     SMS_PROVIDER: str = "netgsm"
     NETGSM_USERNAME: str = ""
     NETGSM_PASSWORD: str = ""
     
-    # Payment (İyzico)
+    # Payment (İyzico - test mode for free)
     IYZICO_API_KEY: str = ""
     IYZICO_SECRET_KEY: str = ""
-    IYZICO_BASE_URL: str = "https://sandbox-api.iyzipay.com"
+    IYZICO_BASE_URL: str = "https://sandbox-api.iyzipay.com"  # Test environment
     
-    # Firebase
+    # Firebase (optional)
     FIREBASE_CREDENTIALS_PATH: str = ""
     
     # CORS
-    CORS_ORIGINS: List[str] = ["http://localhost:5173", "http://localhost:3000"]
+    CORS_ORIGINS: List[str] = [
+        "http://localhost:5173", 
+        "http://localhost:3000",
+        "https://*.vercel.app",
+        "https://*.railway.app"
+    ]
     
     class Config:
         env_file = ".env"

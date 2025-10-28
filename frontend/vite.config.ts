@@ -13,4 +13,20 @@ export default defineConfig({
       },
     },
   },
+  build: {
+    minify: 'terser',
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          router: ['react-router-dom'],
+          ui: ['@headlessui/react', '@heroicons/react']
+        }
+      }
+    },
+    chunkSizeWarningLimit: 1000
+  },
+  define: {
+    'process.env.NODE_ENV': '"production"'
+  }
 })

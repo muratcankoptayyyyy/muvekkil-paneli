@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { useMutation } from '@tanstack/react-query'
 import { authApi } from '../services/api'
 import { useAuthStore } from '../store/authStore'
@@ -8,7 +8,7 @@ import { LogIn } from 'lucide-react'
 export default function LoginPage() {
   const navigate = useNavigate()
   const { setAuth } = useAuthStore()
-  const [email, setEmail] = useState('')
+  const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
 
   const loginMutation = useMutation({
@@ -24,7 +24,7 @@ export default function LoginPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    loginMutation.mutate({ email, password })
+    loginMutation.mutate({ email: username, password })
   }
 
   return (
@@ -45,18 +45,22 @@ export default function LoginPage() {
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                E-posta
+              <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
+                TC Kimlik No / Vergi Kimlik No
               </label>
               <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                id="username"
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 required
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
-                placeholder="ornek@email.com"
+                placeholder="12345678901"
+                maxLength={11}
               />
+              <p className="mt-1 text-xs text-gray-500">
+                Şahıslar için TC Kimlik No, Kurumlar için Vergi Kimlik No
+              </p>
             </div>
 
             <div>
@@ -83,13 +87,8 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <div className="mt-6 text-center">
-            <p className="text-sm text-gray-600">
-              Hesabınız yok mu?{' '}
-              <Link to="/register" className="text-blue-600 hover:text-blue-700 font-semibold">
-                Kayıt Olun
-              </Link>
-            </p>
+          <div className="mt-6 text-center text-sm text-gray-600">
+            <p>Kullanıcı adı ve şifrenizi avukatınızdan alabilirsiniz.</p>
           </div>
         </div>
       </div>

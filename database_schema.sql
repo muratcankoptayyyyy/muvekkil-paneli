@@ -3,29 +3,33 @@
 
 -- Users tablosu (Supabase auth.users'ı extend eder)
 CREATE TABLE IF NOT EXISTS users (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    email VARCHAR(255) UNIQUE NOT NULL,
-    full_name VARCHAR(255),
+    id SERIAL PRIMARY KEY,
+    email VARCHAR(255) UNIQUE,
+    full_name VARCHAR(255) NOT NULL,
     hashed_password VARCHAR(255) NOT NULL,
-    user_type VARCHAR(20) DEFAULT 'individual' CHECK (user_type IN ('individual', 'corporate', 'lawyer')),
+    user_type VARCHAR(20) DEFAULT 'individual' CHECK (user_type IN ('individual', 'corporate', 'lawyer', 'admin')),
     phone VARCHAR(20),
+    tc_kimlik VARCHAR(11) UNIQUE,
+    tax_number VARCHAR(10) UNIQUE,
+    company_name VARCHAR(255),
     is_active BOOLEAN DEFAULT TRUE,
     is_verified BOOLEAN DEFAULT FALSE,
+    last_login TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- Cases (Davalar) tablosu
 CREATE TABLE IF NOT EXISTS cases (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id SERIAL PRIMARY KEY,
     title VARCHAR(200) NOT NULL,
     description TEXT,
     case_number VARCHAR(50) UNIQUE,
     case_type VARCHAR(50),
     status VARCHAR(20) DEFAULT 'active' CHECK (status IN ('active', 'closed', 'pending', 'archived')),
     priority VARCHAR(10) DEFAULT 'medium' CHECK (priority IN ('low', 'medium', 'high', 'urgent')),
-    client_id UUID REFERENCES users(id) ON DELETE CASCADE,
-    lawyer_id UUID REFERENCES users(id) ON DELETE SET NULL,
+    client_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    lawyer_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
     court_name VARCHAR(200),
     court_file_no VARCHAR(100),
     next_hearing_date TIMESTAMP WITH TIME ZONE,
@@ -35,30 +39,30 @@ CREATE TABLE IF NOT EXISTS cases (
 
 -- Documents (Evraklar) tablosu
 CREATE TABLE IF NOT EXISTS documents (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id SERIAL PRIMARY KEY,
     filename VARCHAR(255) NOT NULL,
     original_filename VARCHAR(255),
     file_size INTEGER,
     mime_type VARCHAR(100),
     file_path VARCHAR(500),
     document_type VARCHAR(50),
-    case_id UUID REFERENCES cases(id) ON DELETE CASCADE,
-    uploaded_by UUID REFERENCES users(id) ON DELETE SET NULL,
+    case_id INTEGER REFERENCES cases(id) ON DELETE CASCADE,
+    uploaded_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
     is_public BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- Payments (Ödemeler) tablosu
 CREATE TABLE IF NOT EXISTS payments (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id SERIAL PRIMARY KEY,
     amount DECIMAL(10,2) NOT NULL,
     currency VARCHAR(3) DEFAULT 'TRY',
     status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'completed', 'failed', 'refunded', 'cancelled')),
     payment_method VARCHAR(50),
     transaction_id VARCHAR(100),
     iyzico_payment_id VARCHAR(100),
-    case_id UUID REFERENCES cases(id) ON DELETE SET NULL,
-    client_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    case_id INTEGER REFERENCES cases(id) ON DELETE SET NULL,
+    client_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
     description TEXT,
     payment_date TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -66,43 +70,43 @@ CREATE TABLE IF NOT EXISTS payments (
 
 -- Tasks (Görevler) tablosu
 CREATE TABLE IF NOT EXISTS tasks (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id SERIAL PRIMARY KEY,
     title VARCHAR(200) NOT NULL,
     description TEXT,
     status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'in_progress', 'completed', 'cancelled')),
     priority VARCHAR(10) DEFAULT 'medium' CHECK (priority IN ('low', 'medium', 'high', 'urgent')),
     due_date TIMESTAMP WITH TIME ZONE,
     completed_date TIMESTAMP WITH TIME ZONE,
-    case_id UUID REFERENCES cases(id) ON DELETE CASCADE,
-    assigned_to UUID REFERENCES users(id) ON DELETE SET NULL,
-    created_by UUID REFERENCES users(id) ON DELETE SET NULL,
+    case_id INTEGER REFERENCES cases(id) ON DELETE CASCADE,
+    assigned_to INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    created_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- Notifications (Bildirimler) tablosu
 CREATE TABLE IF NOT EXISTS notifications (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id SERIAL PRIMARY KEY,
     title VARCHAR(200) NOT NULL,
     message TEXT,
     type VARCHAR(20) DEFAULT 'info' CHECK (type IN ('info', 'success', 'warning', 'error', 'reminder')),
     is_read BOOLEAN DEFAULT FALSE,
-    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-    case_id UUID REFERENCES cases(id) ON DELETE SET NULL,
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    case_id INTEGER REFERENCES cases(id) ON DELETE SET NULL,
     related_entity_type VARCHAR(50),
-    related_entity_id UUID,
+    related_entity_id INTEGER,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- Timeline Events (Zaman çizelgesi olayları) tablosu
 CREATE TABLE IF NOT EXISTS timeline_events (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id SERIAL PRIMARY KEY,
     title VARCHAR(200) NOT NULL,
     description TEXT,
     event_type VARCHAR(50),
     event_date TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    case_id UUID REFERENCES cases(id) ON DELETE CASCADE,
-    created_by UUID REFERENCES users(id) ON DELETE SET NULL,
+    case_id INTEGER REFERENCES cases(id) ON DELETE CASCADE,
+    created_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
     metadata JSONB,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -149,12 +153,12 @@ CREATE TRIGGER update_tasks_updated_at
     EXECUTE FUNCTION update_updated_at_column();
 
 -- Demo data (test için)
-INSERT INTO users (email, full_name, hashed_password, user_type) VALUES
-('demo@koptay.com', 'Demo Kullanıcı', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5GyYsKxW0ULmK', 'individual'),
-('lawyer@koptay.com', 'Av. Murat Can Koptay', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5GyYsKxW0ULmK', 'lawyer')
-ON CONFLICT (email) DO NOTHING;
-
--- Demo şifresi: "password123" (hash edilmiş)
+-- Şifre: password123 (hash edilmiş)
+INSERT INTO users (email, full_name, hashed_password, user_type, tc_kimlik, phone, is_active, is_verified) VALUES
+('muratcan@koptay.av.tr', 'Murat Can Koptay', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5GyYBxVzFe1p2', 'individual', '16469655934', '0532 111 2233', true, true),
+('admin@koptay.av.tr', 'Admin Kullanıcı', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5GyYBxVzFe1p2', 'admin', null, '0532 123 4567', true, true),
+('demo@koptay.com', 'Demo Kurumsal', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5GyYBxVzFe1p2', 'corporate', null, '0532 999 8888', true, true)
+ON CONFLICT (tc_kimlik) DO NOTHING;
 
 COMMENT ON TABLE users IS 'Kullanıcı bilgileri';
 COMMENT ON TABLE cases IS 'Dava kayıtları';

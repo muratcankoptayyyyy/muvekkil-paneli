@@ -3,7 +3,7 @@ import { useAuthStore } from '../store/authStore'
 import { CreditCard, Calendar, CheckCircle, Clock, AlertCircle, Download, DollarSign } from 'lucide-react'
 
 export default function PaymentsPage() {
-  const { user } = useAuthStore()
+  const { user: _user } = useAuthStore()
   const [selectedTab, setSelectedTab] = useState<'all' | 'pending' | 'completed'>('all')
 
   const payments = [

@@ -27,22 +27,22 @@ def create_demo_users():
         else:
             print("ℹ️  Admin kullanıcısı zaten mevcut")
         
-        # Demo bireysel müşteri
-        individual = db.query(User).filter(User.tc_kimlik == "12345678901").first()
+        # Demo bireysel müşteri - Murat Can Koptay
+        individual = db.query(User).filter(User.tc_kimlik == "16469655934").first()
         if not individual:
             individual = User(
-                email="ahmet@example.com",
-                hashed_password=get_password_hash("123456"),
-                full_name="Ahmet Yılmaz",
+                email="muratcan@koptay.av.tr",
+                hashed_password=get_password_hash("password123"),
+                full_name="Murat Can Koptay",
                 phone="0532 111 2233",
-                tc_kimlik="12345678901",
+                tc_kimlik="16469655934",
                 user_type="individual",
                 is_active=True
             )
             db.add(individual)
             print("✅ Bireysel müşteri oluşturuldu")
-            print("   TC Kimlik: 12345678901")
-            print("   Şifre: 123456")
+            print("   TC Kimlik: 16469655934")
+            print("   Şifre: password123")
         else:
             print("ℹ️  Bireysel müşteri zaten mevcut")
         
@@ -74,8 +74,8 @@ def create_demo_users():
         print("  Kullanıcı Adı: admin (özel admin girişi)")
         print("  Şifre: admin123")
         print("\nBİREYSEL MÜŞTERİ:")
-        print("  Kullanıcı Adı: 12345678901")
-        print("  Şifre: 123456")
+        print("  Kullanıcı Adı: 16469655934")
+        print("  Şifre: password123")
         print("\nKURUMSAL MÜŞTERİ:")
         print("  Kullanıcı Adı: 1234567890")
         print("  Şifre: 123456")

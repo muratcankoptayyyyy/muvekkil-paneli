@@ -26,7 +26,7 @@ interface Notification {
 }
 
 export default function NotificationsPage() {
-  const { user } = useAuthStore()
+  const { user: _user } = useAuthStore()
   const [selectedType, setSelectedType] = useState<NotificationType>('all')
   const [notifications, setNotifications] = useState<Notification[]>([
     {

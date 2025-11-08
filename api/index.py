@@ -51,7 +51,7 @@ def init_database():
         count = result.scalar()
         
         if count == 0:
-            # Insert demo user
+            # Insert demo user (password: 123456)
             db.execute(text("""
                 INSERT INTO users (email, full_name, hashed_password, user_type, tc_kimlik, phone, is_active, is_verified) 
                 VALUES (
@@ -65,6 +65,7 @@ def init_database():
                     true
                 )
             """))
+            print("✅ Demo user created: TC 16469655934, Password: 123456")
         
         db.commit()
         return True
@@ -188,13 +189,38 @@ def health():
 
 @app.get("/test-db")
 def test_db():
+    from sqlalchemy import text
     try:
         db = SessionLocal()
-        result = db.execute("SELECT 1")
+        result = db.execute(text("SELECT COUNT(*) FROM users"))
+        count = result.scalar()
         db.close()
-        return {"status": "Database connected!", "database_url_set": bool(os.getenv("DATABASE_URL"))}
+        return {
+            "status": "Database connected!", 
+            "users_count": count,
+            "database_url_set": bool(os.getenv("DATABASE_URL"))
+        }
     except Exception as e:
-        return {"status": "Database connection failed", "error": str(e), "database_url_set": bool(os.getenv("DATABASE_URL"))}
+        return {
+            "status": "Database connection failed", 
+            "error": str(e), 
+            "database_url_set": bool(os.getenv("DATABASE_URL"))
+        }
+
+@app.get("/test-user")
+def test_user():
+    from sqlalchemy import text
+    try:
+        db = SessionLocal()
+        result = db.execute(text("SELECT * FROM users WHERE tc_kimlik = '16469655934'"))
+        user = result.fetchone()
+        db.close()
+        if user:
+            return {"status": "User found!", "user": dict(user._mapping)}
+        else:
+            return {"status": "User not found"}
+    except Exception as e:
+        return {"status": "Error", "error": str(e)}
 
 # Vercel handler
 handler = Mangum(app)

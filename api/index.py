@@ -42,14 +42,15 @@ class User(Base):
 # Schemas
 class UserResponse(BaseModel):
     id: int
-    email: str
+    email: str | None = None
     full_name: str
     user_type: str
-    tc_kimlik: str = None
+    tc_kimlik: str | None = None
     is_active: bool
     
     class Config:
         from_attributes = True
+        orm_mode = True
 
 # App
 app = FastAPI(title="Koptay Müvekkil Paneli API")
@@ -103,7 +104,14 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = 
     return {
         "access_token": access_token,
         "token_type": "bearer",
-        "user": UserResponse.from_orm(user)
+        "user": {
+            "id": user.id,
+            "email": user.email,
+            "full_name": user.full_name,
+            "user_type": user.user_type,
+            "tc_kimlik": user.tc_kimlik,
+            "is_active": user.is_active
+        }
     }
 
 @app.get("/")

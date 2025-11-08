@@ -81,7 +81,7 @@ def create_access_token(data: dict):
     return jwt.encode(to_encode, SECRET_KEY, algorithm="HS256")
 
 # Routes
-@app.post("/api/auth/login")
+@app.post("/auth/login")
 async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     # TC Kimlik veya Vergi No ile kullanıcı ara
     user = db.query(User).filter(
@@ -121,6 +121,16 @@ def root():
 @app.get("/health")
 def health():
     return {"status": "healthy"}
+
+@app.get("/test-db")
+def test_db():
+    try:
+        db = SessionLocal()
+        result = db.execute("SELECT 1")
+        db.close()
+        return {"status": "Database connected!", "database_url_set": bool(os.getenv("DATABASE_URL"))}
+    except Exception as e:
+        return {"status": "Database connection failed", "error": str(e), "database_url_set": bool(os.getenv("DATABASE_URL"))}
 
 # Vercel handler
 handler = Mangum(app)

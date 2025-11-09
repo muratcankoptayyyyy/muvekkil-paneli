@@ -19,6 +19,7 @@ from app.models.task import Task
 from app.models.payment import Payment
 from app.models.notification import Notification
 from app.models.timeline import TimelineEvent
+from app.models.audit_log import AuditLog
 
 # this is the Alembic Config object
 config = context.config

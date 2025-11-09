@@ -34,11 +34,11 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-teal-50 to-cyan-100 flex items-center justify-center p-4">
       <div className="max-w-md w-full">
         <div className="bg-white rounded-2xl shadow-xl p-8">
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-full mb-4">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full mb-4" style={{ backgroundColor: '#548c8d' }}>
               <LogIn className="text-white" size={32} />
             </div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
@@ -60,7 +60,9 @@ export default function LoginPage() {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg outline-none transition"
+                onFocus={(e) => e.target.style.borderColor = '#548c8d'}
+                onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
                 placeholder="TC Kimlik No, Vergi No veya Email"
               />
               <p className="mt-1 text-xs text-gray-500">
@@ -78,7 +80,9 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg outline-none transition"
+                onFocus={(e) => e.target.style.borderColor = '#548c8d'}
+                onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
                 placeholder="••••••••"
               />
             </div>
@@ -86,7 +90,10 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loginMutation.isPending}
-              className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+              className="w-full text-white py-3 rounded-lg font-semibold transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+              style={{ backgroundColor: loginMutation.isPending ? '#9ca3af' : '#548c8d' }}
+              onMouseEnter={(e) => !loginMutation.isPending && (e.currentTarget.style.backgroundColor = '#3d6566')}
+              onMouseLeave={(e) => !loginMutation.isPending && (e.currentTarget.style.backgroundColor = '#548c8d')}
             >
               {loginMutation.isPending ? 'Giriş yapılıyor...' : 'Giriş Yap'}
             </button>

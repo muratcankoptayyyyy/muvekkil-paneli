@@ -51,17 +51,18 @@ async def login(
 ):
     """
     Kullanıcı girişi
-    - Admin için: username = "admin", email ile giriş
+    - Admin/Avukat için: username = email adresi
     - Müşteriler için: username = TC Kimlik No veya Vergi Kimlik No
     """
     
     user = None
     
-    # Admin kontrolü - username "admin" ise email ile ara
-    if form_data.username == "admin":
-        user = db.query(User).filter(User.user_type == "admin").first()
+    # Email formatında mı kontrol et (@ işareti varsa email)
+    if "@" in form_data.username:
+        # Email ile giriş (admin/lawyer)
+        user = db.query(User).filter(User.email == form_data.username).first()
     else:
-        # TC Kimlik veya Vergi No ile kullanıcı ara
+        # TC Kimlik veya Vergi No ile kullanıcı ara (client)
         user = db.query(User).filter(
             (User.tc_kimlik == form_data.username) | (User.tax_number == form_data.username)
         ).first()

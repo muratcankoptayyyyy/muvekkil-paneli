@@ -15,7 +15,13 @@ export default function LoginPage() {
     mutationFn: authApi.login,
     onSuccess: (data) => {
       setAuth(data.user, data.access_token)
-      navigate('/dashboard')
+      
+      // Role-based redirect
+      if (data.user.user_type === 'admin' || data.user.user_type === 'lawyer') {
+        navigate('/admin/dashboard')
+      } else {
+        navigate('/dashboard')
+      }
     },
     onError: (error: any) => {
       alert(error.response?.data?.detail || 'Giriş başarısız')

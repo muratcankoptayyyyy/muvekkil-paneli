@@ -9,15 +9,50 @@ import NotificationsPage from './pages/NotificationsPage'
 import ProfilePage from './pages/ProfilePage'
 import Layout from './components/Layout'
 
+// Admin pages
+import AdminDashboardPage from './pages/admin/AdminDashboardPage'
+import AdminClientsPage from './pages/admin/AdminClientsPage'
+import AdminCasesPage from './pages/admin/AdminCasesPage'
+import AdminDocumentsUploadPage from './pages/admin/AdminDocumentsUploadPage'
+import AdminPaymentsCreatePage from './pages/admin/AdminPaymentsCreatePage'
+
 function App() {
-  const { isAuthenticated } = useAuthStore()
+  const { isAuthenticated, user } = useAuthStore()
+
+  const isAdmin = user?.user_type === 'admin' || user?.user_type === 'lawyer'
 
   return (
     <Routes>
       {/* Public routes */}
       <Route path="/login" element={<LoginPage />} />
 
-      {/* Protected routes */}
+      {/* Admin routes */}
+      {isAdmin && (
+        <Route element={<Layout />}>
+          <Route
+            path="/admin/dashboard"
+            element={isAuthenticated ? <AdminDashboardPage /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/admin/clients"
+            element={isAuthenticated ? <AdminClientsPage /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/admin/cases"
+            element={isAuthenticated ? <AdminCasesPage /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/admin/documents/upload"
+            element={isAuthenticated ? <AdminDocumentsUploadPage /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/admin/payments/create"
+            element={isAuthenticated ? <AdminPaymentsCreatePage /> : <Navigate to="/login" />}
+          />
+        </Route>
+      )}
+
+      {/* Client routes */}
       <Route element={<Layout />}>
         <Route
           path="/dashboard"
@@ -46,7 +81,16 @@ function App() {
       </Route>
 
       {/* Default redirect */}
-      <Route path="/" element={<Navigate to="/dashboard" />} />
+      <Route
+        path="/"
+        element={
+          isAuthenticated ? (
+            isAdmin ? <Navigate to="/admin/dashboard" /> : <Navigate to="/dashboard" />
+          ) : (
+            <Navigate to="/login" />
+          )
+        }
+      />
     </Routes>
   )
 }

@@ -4,6 +4,7 @@ import { useMutation } from '@tanstack/react-query'
 import { authApi } from '../services/api'
 import { UserPlus } from 'lucide-react'
 import type { RegisterRequest } from '../types'
+import AnimatedBackground from '../components/AnimatedBackground'
 
 export default function RegisterPage() {
   const navigate = useNavigate()
@@ -36,11 +37,13 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <div className="max-w-md w-full">
+    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden" style={{ background: 'linear-gradient(to bottom right, #457c7d, #548c8d)' }}>
+      <AnimatedBackground />
+      
+      <div className="max-w-md w-full relative z-10">
         <div className="bg-white rounded-2xl shadow-xl p-8">
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-full mb-4">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full mb-4" style={{ backgroundColor: '#548c8d' }}>
               <UserPlus className="text-white" size={32} />
             </div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
@@ -131,7 +134,10 @@ export default function RegisterPage() {
             <button
               type="submit"
               disabled={registerMutation.isPending}
-              className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+              className="w-full text-white py-3 rounded-lg font-semibold transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+              style={{ backgroundColor: registerMutation.isPending ? '#9ca3af' : '#548c8d' }}
+              onMouseEnter={(e) => !registerMutation.isPending && (e.currentTarget.style.backgroundColor = '#3d6566')}
+              onMouseLeave={(e) => !registerMutation.isPending && (e.currentTarget.style.backgroundColor = '#548c8d')}
             >
               {registerMutation.isPending ? 'Kayıt yapılıyor...' : 'Kayıt Ol'}
             </button>
@@ -140,7 +146,7 @@ export default function RegisterPage() {
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600">
               Zaten hesabınız var mı?{' '}
-              <Link to="/login" className="text-blue-600 hover:text-blue-700 font-semibold">
+              <Link to="/login" className="font-semibold" style={{ color: '#548c8d' }}>
                 Giriş Yapın
               </Link>
             </p>

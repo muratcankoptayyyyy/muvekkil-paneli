@@ -1,6 +1,7 @@
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import { LogOut, FileText, Home, Bell, CreditCard, User, Users, Briefcase, Upload, DollarSign, LayoutDashboard } from 'lucide-react'
+import AnimatedBackground from './AnimatedBackground'
 
 export default function Layout() {
   const { user, logout } = useAuthStore()
@@ -16,9 +17,11 @@ export default function Layout() {
   const isAdminRoute = location.pathname.startsWith('/admin')
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen relative" style={{ background: 'linear-gradient(to bottom right, #457c7d, #548c8d)' }}>
+      <AnimatedBackground />
+      
       {/* Header */}
-      <header className="bg-white shadow-sm">
+      <header className="bg-white shadow-sm relative z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-4">
@@ -31,9 +34,10 @@ export default function Layout() {
                     to="/admin/dashboard"
                     className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
                       isAdminRoute
-                        ? 'bg-blue-600 text-white'
+                        ? 'text-white'
                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                     }`}
+                    style={isAdminRoute ? { backgroundColor: '#548c8d' } : undefined}
                   >
                     Ofis Paneli
                   </Link>
@@ -41,9 +45,10 @@ export default function Layout() {
                     to="/dashboard"
                     className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
                       !isAdminRoute
-                        ? 'bg-blue-600 text-white'
+                        ? 'text-white'
                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                     }`}
+                    style={!isAdminRoute ? { backgroundColor: '#548c8d' } : undefined}
                   >
                     Müvekkil Görünümü
                   </Link>
@@ -65,7 +70,7 @@ export default function Layout() {
         </div>
       </header>
 
-      <div className="flex">
+      <div className="flex relative z-10">
         {/* Sidebar */}
         <aside className="w-64 bg-white shadow-sm min-h-[calc(100vh-4rem)]">
           <nav className="p-4 space-y-2">
@@ -74,7 +79,21 @@ export default function Layout() {
               <>
                 <Link
                   to="/admin/dashboard"
-                  className="flex items-center gap-3 px-4 py-3 text-gray-700 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                  className="flex items-center gap-3 px-4 py-3 text-gray-700 rounded-lg transition-colors"
+                  style={{ 
+                    backgroundColor: location.pathname === '/admin/dashboard' ? '#548c8d' : 'transparent',
+                    color: location.pathname === '/admin/dashboard' ? 'white' : '#374151'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (location.pathname !== '/admin/dashboard') {
+                      e.currentTarget.style.backgroundColor = '#f0fdfa'
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (location.pathname !== '/admin/dashboard') {
+                      e.currentTarget.style.backgroundColor = 'transparent'
+                    }
+                  }}
                 >
                   <LayoutDashboard size={20} />
                   <span>Dashboard</span>
@@ -82,7 +101,21 @@ export default function Layout() {
                 
                 <Link
                   to="/admin/clients"
-                  className="flex items-center gap-3 px-4 py-3 text-gray-700 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                  className="flex items-center gap-3 px-4 py-3 text-gray-700 rounded-lg transition-colors"
+                  style={{ 
+                    backgroundColor: location.pathname === '/admin/clients' ? '#548c8d' : 'transparent',
+                    color: location.pathname === '/admin/clients' ? 'white' : '#374151'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (location.pathname !== '/admin/clients') {
+                      e.currentTarget.style.backgroundColor = '#f0fdfa'
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (location.pathname !== '/admin/clients') {
+                      e.currentTarget.style.backgroundColor = 'transparent'
+                    }
+                  }}
                 >
                   <Users size={20} />
                   <span>Müvekkiller</span>
@@ -90,7 +123,21 @@ export default function Layout() {
                 
                 <Link
                   to="/admin/cases"
-                  className="flex items-center gap-3 px-4 py-3 text-gray-700 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                  className="flex items-center gap-3 px-4 py-3 text-gray-700 rounded-lg transition-colors"
+                  style={{ 
+                    backgroundColor: location.pathname === '/admin/cases' ? '#548c8d' : 'transparent',
+                    color: location.pathname === '/admin/cases' ? 'white' : '#374151'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (location.pathname !== '/admin/cases') {
+                      e.currentTarget.style.backgroundColor = '#f0fdfa'
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (location.pathname !== '/admin/cases') {
+                      e.currentTarget.style.backgroundColor = 'transparent'
+                    }
+                  }}
                 >
                   <Briefcase size={20} />
                   <span>Tüm Dosyalar</span>
@@ -98,7 +145,21 @@ export default function Layout() {
                 
                 <Link
                   to="/admin/documents/upload"
-                  className="flex items-center gap-3 px-4 py-3 text-gray-700 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                  className="flex items-center gap-3 px-4 py-3 text-gray-700 rounded-lg transition-colors"
+                  style={{ 
+                    backgroundColor: location.pathname === '/admin/documents/upload' ? '#548c8d' : 'transparent',
+                    color: location.pathname === '/admin/documents/upload' ? 'white' : '#374151'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (location.pathname !== '/admin/documents/upload') {
+                      e.currentTarget.style.backgroundColor = '#f0fdfa'
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (location.pathname !== '/admin/documents/upload') {
+                      e.currentTarget.style.backgroundColor = 'transparent'
+                    }
+                  }}
                 >
                   <Upload size={20} />
                   <span>Evrak Yükle</span>
@@ -106,7 +167,21 @@ export default function Layout() {
                 
                 <Link
                   to="/admin/payments/create"
-                  className="flex items-center gap-3 px-4 py-3 text-gray-700 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                  className="flex items-center gap-3 px-4 py-3 text-gray-700 rounded-lg transition-colors"
+                  style={{ 
+                    backgroundColor: location.pathname === '/admin/payments/create' ? '#548c8d' : 'transparent',
+                    color: location.pathname === '/admin/payments/create' ? 'white' : '#374151'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (location.pathname !== '/admin/payments/create') {
+                      e.currentTarget.style.backgroundColor = '#f0fdfa'
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (location.pathname !== '/admin/payments/create') {
+                      e.currentTarget.style.backgroundColor = 'transparent'
+                    }
+                  }}
                 >
                   <DollarSign size={20} />
                   <span>Ödeme Talebi</span>

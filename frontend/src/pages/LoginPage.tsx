@@ -52,7 +52,7 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
-                TC Kimlik No / Vergi Kimlik No
+                Kullanıcı Adı
               </label>
               <input
                 id="username"
@@ -61,11 +61,10 @@ export default function LoginPage() {
                 onChange={(e) => setUsername(e.target.value)}
                 required
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
-                placeholder="12345678901"
-                maxLength={11}
+                placeholder="TC Kimlik No, Vergi No veya Email"
               />
               <p className="mt-1 text-xs text-gray-500">
-                Şahıslar için TC Kimlik No, Kurumlar için Vergi Kimlik No
+                TC Kimlik No, Vergi No veya Email ile giriş yapabilirsiniz
               </p>
             </div>
 

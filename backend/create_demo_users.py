@@ -32,7 +32,7 @@ def create_demo_users():
         if not individual:
             individual = User(
                 email="muratcan@koptay.av.tr",
-                hashed_password=get_password_hash("password123"),
+                hashed_password=get_password_hash("123456"),
                 full_name="Murat Can Koptay",
                 phone="0532 111 2233",
                 tc_kimlik="16469655934",
@@ -42,7 +42,7 @@ def create_demo_users():
             db.add(individual)
             print("✅ Bireysel müşteri oluşturuldu")
             print("   TC Kimlik: 16469655934")
-            print("   Şifre: password123")
+            print("   Şifre: 123456")
         else:
             print("ℹ️  Bireysel müşteri zaten mevcut")
         
@@ -75,7 +75,7 @@ def create_demo_users():
         print("  Şifre: admin123")
         print("\nBİREYSEL MÜŞTERİ:")
         print("  Kullanıcı Adı: 16469655934")
-        print("  Şifre: password123")
+        print("  Şifre: 123456")
         print("\nKURUMSAL MÜŞTERİ:")
         print("  Kullanıcı Adı: 1234567890")
         print("  Şifre: 123456")

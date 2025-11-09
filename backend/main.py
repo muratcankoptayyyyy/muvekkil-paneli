@@ -2,6 +2,17 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.api.routes import api_router
+from app.core.database import engine
+from app.models import user, case, document, notification, payment, task, timeline
+
+# Database tablolarını oluştur
+user.Base.metadata.create_all(bind=engine)
+case.Base.metadata.create_all(bind=engine)
+document.Base.metadata.create_all(bind=engine)
+notification.Base.metadata.create_all(bind=engine)
+payment.Base.metadata.create_all(bind=engine)
+task.Base.metadata.create_all(bind=engine)
+timeline.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title=settings.APP_NAME,

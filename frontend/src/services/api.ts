@@ -1,9 +1,9 @@
 import axios from 'axios'
 import type { LoginRequest, LoginResponse, RegisterRequest, User } from '../types'
 
-// Production'da relative path kullan, development'ta localhost
+// Production'da Fly.io URL kullan, development'ta localhost
 const API_URL = import.meta.env.VITE_API_URL || 
-  (import.meta.env.MODE === 'production' ? '' : 'http://localhost:8000')
+  (import.meta.env.MODE === 'production' ? 'https://muvekkil-paneli.fly.dev' : 'http://localhost:8000')
 
 const api = axios.create({
   baseURL: `${API_URL}/api`,

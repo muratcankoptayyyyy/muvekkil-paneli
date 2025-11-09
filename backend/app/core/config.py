@@ -10,6 +10,14 @@ class Settings(BaseSettings):
     # Database
     DATABASE_URL: str
     
+    @property
+    def database_url(self) -> str:
+        """Fix postgres:// to postgresql:// for SQLAlchemy 2.0"""
+        url = self.DATABASE_URL
+        if url.startswith("postgres://"):
+            return url.replace("postgres://", "postgresql://", 1)
+        return url
+    
     # Supabase (for free deployment)
     SUPABASE_URL: str = ""
     SUPABASE_ANON_KEY: str = ""

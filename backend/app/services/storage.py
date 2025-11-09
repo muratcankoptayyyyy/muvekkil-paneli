@@ -1,6 +1,6 @@
 """
-Supabase Storage Service
-Ücretsiz dosya depolama için Supabase Storage entegrasyonu
+Storage Service - Dosya yükleme/indirme/silme işlemleri
+MinIO veya Supabase Storage kullanır
 """
 from supabase import create_client, Client
 from app.core.config import settings
@@ -9,8 +9,17 @@ import mimetypes
 from typing import Optional, BinaryIO
 from datetime import datetime, timedelta
 import logging
+import os
 
 logger = logging.getLogger(__name__)
+
+# MinIO için
+try:
+    from minio import Minio
+    from minio.error import S3Error
+    MINIO_AVAILABLE = True
+except ImportError:
+    MINIO_AVAILABLE = False
 
 class SupabaseStorageService:
     """Supabase Storage ile dosya yönetimi"""

@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.api.endpoints import auth, cases, admin
+from app.api.endpoints import auth, cases, admin, documents, payments
 
 api_router = APIRouter()
 
@@ -7,10 +7,10 @@ api_router = APIRouter()
 api_router.include_router(auth.router, prefix="/auth", tags=["authentication"])
 api_router.include_router(cases.router, prefix="/cases", tags=["cases"])
 api_router.include_router(admin.router, prefix="/admin", tags=["admin"])
+api_router.include_router(documents.router, prefix="/documents", tags=["documents"])
+api_router.include_router(payments.router, prefix="/payments", tags=["payments"])
 
 # More routers will be added here:
-# api_router.include_router(documents.router, prefix="/documents", tags=["documents"])
-# api_router.include_router(payments.router, prefix="/payments", tags=["payments"])
 # api_router.include_router(notifications.router, prefix="/notifications", tags=["notifications"])
 
 @api_router.get("/ping")

@@ -1,15 +1,27 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query'
+import { useSearchParams } from 'react-router-dom'
 import api from '../../services/api'
 import { Upload, FileText, AlertCircle, CheckCircle } from 'lucide-react'
 
 export default function AdminDocumentsUploadPage() {
+  const [searchParams] = useSearchParams()
+  const initialCaseId = searchParams.get('case_id') || ''
+  
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const [caseId, setCaseId] = useState('')
+  const [caseId, setCaseId] = useState(initialCaseId)
   const [documentType, setDocumentType] = useState('other')
   const [isVisibleToClient, setIsVisibleToClient] = useState(true)
   const [uploadProgress, setUploadProgress] = useState(0)
   const queryClient = useQueryClient()
+
+  // Update caseId if URL param changes
+  useEffect(() => {
+    const urlCaseId = searchParams.get('case_id')
+    if (urlCaseId) {
+      setCaseId(urlCaseId)
+    }
+  }, [searchParams])
 
   const { data: cases } = useQuery({
     queryKey: ['admin-cases-for-upload'],

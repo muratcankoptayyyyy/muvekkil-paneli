@@ -66,9 +66,6 @@ class Settings(BaseSettings):
     CORS_ORIGINS: List[str] = [
         "http://localhost:5173", 
         "http://localhost:3000",
-        "https://*.vercel.app",
-        "https://*.railway.app",
-        "https://*.fly.dev",
         "https://muvekkil-frontend.fly.dev"
     ]
     

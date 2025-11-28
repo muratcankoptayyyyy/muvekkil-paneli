@@ -13,6 +13,7 @@ import Layout from './components/Layout'
 import AdminDashboardPage from './pages/admin/AdminDashboardPage'
 import AdminClientsPage from './pages/admin/AdminClientsPage'
 import AdminCasesPage from './pages/admin/AdminCasesPage'
+import AdminCaseCreatePage from './pages/admin/AdminCaseCreatePage'
 import AdminDocumentsUploadPage from './pages/admin/AdminDocumentsUploadPage'
 import AdminPaymentsCreatePage from './pages/admin/AdminPaymentsCreatePage'
 
@@ -40,6 +41,10 @@ function App() {
           <Route
             path="/admin/cases"
             element={isAuthenticated ? <AdminCasesPage /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/admin/cases/new"
+            element={isAuthenticated ? <AdminCaseCreatePage /> : <Navigate to="/login" />}
           />
           <Route
             path="/admin/documents/upload"

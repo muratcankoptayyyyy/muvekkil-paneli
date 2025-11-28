@@ -2,6 +2,7 @@ import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import { LogOut, FileText, Home, Bell, CreditCard, User, Users, Briefcase, Upload, DollarSign, LayoutDashboard } from 'lucide-react'
 import AnimatedBackground from './AnimatedBackground'
+import NotificationBell from './NotificationBell'
 
 export default function Layout() {
   const { user, logout } = useAuthStore()
@@ -57,6 +58,7 @@ export default function Layout() {
             </div>
             
             <div className="flex items-center gap-4">
+              <NotificationBell />
               <span className="text-sm text-gray-700">{user?.full_name}</span>
               <button
                 onClick={handleLogout}

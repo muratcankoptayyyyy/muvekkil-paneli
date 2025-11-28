@@ -8,6 +8,8 @@ from app.models.user import User
 from app.models.payment import Payment, PaymentStatus, PaymentMethod
 from app.models.case import Case
 from app.api.endpoints.auth import get_current_user
+from app.services.notification import create_notification
+from app.models.notification import NotificationType, NotificationPriority
 from app.core.permissions import (
     can_manage_payments,
     is_admin_or_lawyer,
@@ -98,6 +100,19 @@ async def create_payment_request(
     db.add(payment)
     db.commit()
     db.refresh(payment)
+    
+    # Bildirim oluştur
+    await create_notification(
+        db=db,
+        user_id=payment.user_id,
+        title="Yeni Ödeme Talebi",
+        message=f"Sizin için {payment.amount} {payment.currency} tutarında yeni bir ödeme talebi oluşturuldu: {payment.description}",
+        type=NotificationType.PAYMENT_UPDATE,
+        priority=NotificationPriority.HIGH,
+        related_entity_type="payment",
+        related_entity_id=payment.id,
+        case_id=payment.case_id
+    )
     
     # Audit log
     await log_audit(

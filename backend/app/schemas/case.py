@@ -13,6 +13,8 @@ class CaseBase(BaseModel):
 class CaseCreate(CaseBase):
     case_number: str
     next_hearing_date: Optional[datetime] = None
+    client_id: Optional[int] = None  # Admin/Lawyer can specify client
+
 
 class CaseUpdate(BaseModel):
     title: Optional[str] = None

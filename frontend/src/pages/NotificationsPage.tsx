@@ -10,128 +10,60 @@ import {
   AlertCircle,
   Info,
   CheckCircle,
-  Filter
+  Filter,
+  Gavel
 } from 'lucide-react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { notificationService, Notification } from '../services/notification'
+import { format } from 'date-fns'
+import { tr } from 'date-fns/locale'
 
-type NotificationType = 'all' | 'case' | 'payment' | 'document' | 'system'
-
-interface Notification {
-  id: number
-  type: 'case' | 'payment' | 'document' | 'system'
-  title: string
-  message: string
-  date: string
-  read: boolean
-  priority: 'low' | 'medium' | 'high'
-}
+type NotificationFilterType = 'all' | 'case_update' | 'payment_update' | 'document_upload' | 'system'
 
 export default function NotificationsPage() {
   const { user: _user } = useAuthStore()
-  const [selectedType, setSelectedType] = useState<NotificationType>('all')
-  const [notifications, setNotifications] = useState<Notification[]>([
-    {
-      id: 1,
-      type: 'case',
-      title: 'Duruşma Tarihi Yaklaşıyor',
-      message: '2024/123 numaralı davanızın duruşması 28 Ekim 2024 tarihinde Ankara 5. Asliye Hukuk Mahkemesinde yapılacaktır.',
-      date: '2024-10-25T10:30:00',
-      read: false,
-      priority: 'high'
+  const queryClient = useQueryClient()
+  const [selectedType, setSelectedType] = useState<NotificationFilterType>('all')
+
+  // Bildirimleri getir
+  const { data: notifications = [], isLoading } = useQuery({
+    queryKey: ['notifications', 'all'],
+    queryFn: () => notificationService.getAll(0, 100), // Daha fazla getir
+  })
+
+  // Okundu olarak işaretle
+  const markAsReadMutation = useMutation({
+    mutationFn: notificationService.markAsRead,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notifications'] })
+      queryClient.invalidateQueries({ queryKey: ['unreadCount'] })
     },
-    {
-      id: 2,
-      type: 'payment',
-      title: 'Ödeme Vadesi Yaklaşıyor',
-      message: '5.000 TL tutarındaki dava masrafları ödemesi 05 Kasım 2024 tarihinde ödenmelidir.',
-      date: '2024-10-24T15:00:00',
-      read: false,
-      priority: 'high'
+  })
+
+  // Tümünü okundu olarak işaretle
+  const markAllAsReadMutation = useMutation({
+    mutationFn: notificationService.markAllAsRead,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notifications'] })
+      queryClient.invalidateQueries({ queryKey: ['unreadCount'] })
     },
-    {
-      id: 3,
-      type: 'document',
-      title: 'Yeni Belge Yüklendi',
-      message: 'Bilirkişi raporu dosyanıza yüklendi. Belgeyi inceleyebilirsiniz.',
-      date: '2024-10-23T14:20:00',
-      read: true,
-      priority: 'medium'
-    },
-    {
-      id: 4,
-      type: 'case',
-      title: 'Dava Durumu Güncellendi',
-      message: '2024/98 numaralı davanız tamamlandı olarak işaretlendi.',
-      date: '2024-10-22T11:00:00',
-      read: true,
-      priority: 'medium'
-    },
-    {
-      id: 5,
-      type: 'system',
-      title: 'Güvenlik Uyarısı',
-      message: 'Şifrenizi son 90 gün içinde değiştirmediniz. Güvenliğiniz için şifrenizi değiştirmenizi öneririz.',
-      date: '2024-10-20T09:00:00',
-      read: false,
-      priority: 'low'
-    },
-    {
-      id: 6,
-      type: 'payment',
-      title: 'Ödeme Alındı',
-      message: '15.000 TL tutarındaki ilk vekalet ücreti ödemesi başarıyla alınmıştır. Faturanız hazırlanmıştır.',
-      date: '2024-10-15T16:45:00',
-      read: true,
-      priority: 'low'
-    },
-    {
-      id: 7,
-      type: 'document',
-      title: 'İmza Bekleniyor',
-      message: 'Vekalet sözleşmesi belgesi imzanızı bekliyor. Lütfen en kısa sürede imzalayınız.',
-      date: '2024-10-14T10:00:00',
-      read: false,
-      priority: 'high'
-    },
-    {
-      id: 8,
-      type: 'case',
-      title: 'Duruşma Tutanağı',
-      message: '20 Ekim 2024 tarihli duruşmanın tutanağı dosyanıza eklendi.',
-      date: '2024-10-21T13:30:00',
-      read: true,
-      priority: 'low'
-    }
-  ])
+  })
 
   const filteredNotifications = notifications.filter(notif => {
     if (selectedType === 'all') return true
-    return notif.type === selectedType
+    return notif.notification_type === selectedType
   })
 
-  const unreadCount = notifications.filter(n => !n.read).length
-
-  const markAsRead = (id: number) => {
-    setNotifications(notifications.map(n => 
-      n.id === id ? { ...n, read: true } : n
-    ))
-  }
-
-  const markAllAsRead = () => {
-    setNotifications(notifications.map(n => ({ ...n, read: true })))
-  }
-
-  const deleteNotification = (id: number) => {
-    setNotifications(notifications.filter(n => n.id !== id))
-  }
+  const unreadCount = notifications.filter(n => !n.is_read).length
 
   const getIcon = (type: string) => {
     switch (type) {
-      case 'case':
-        return <FileText className="text-blue-600" size={20} />
-      case 'payment':
+      case 'case_update':
+        return <Gavel className="text-blue-600" size={20} />
+      case 'payment_update':
         return <CreditCard className="text-green-600" size={20} />
-      case 'document':
-        return <FileText className="text-purple-600" size={20} />
+      case 'document_upload':
+        return <FileText className="text-orange-600" size={20} />
       case 'system':
         return <Info className="text-gray-600" size={20} />
       default:
@@ -152,23 +84,6 @@ export default function NotificationsPage() {
     }
   }
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    const now = new Date()
-    const diffTime = Math.abs(now.getTime() - date.getTime())
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-
-    if (diffDays === 0) {
-      return 'Bugün ' + date.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })
-    } else if (diffDays === 1) {
-      return 'Dün ' + date.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })
-    } else if (diffDays < 7) {
-      return diffDays + ' gün önce'
-    } else {
-      return date.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })
-    }
-  }
-
   return (
     <div>
       <div className="mb-8 flex items-center justify-between">
@@ -180,7 +95,7 @@ export default function NotificationsPage() {
         </div>
         {unreadCount > 0 && (
           <button
-            onClick={markAllAsRead}
+            onClick={() => markAllAsReadMutation.mutate()}
             className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
             <CheckCircle size={18} />
@@ -205,48 +120,37 @@ export default function NotificationsPage() {
               Tümü ({notifications.length})
             </button>
             <button
-              onClick={() => setSelectedType('case')}
+              onClick={() => setSelectedType('case_update')}
               className={`py-4 px-6 border-b-2 font-medium text-sm whitespace-nowrap ${
-                selectedType === 'case'
+                selectedType === 'case_update'
                   ? 'border-blue-600 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
-              <FileText className="inline mr-2" size={16} />
-              Dava ({notifications.filter(n => n.type === 'case').length})
+              <Gavel className="inline mr-2" size={16} />
+              Dava ({notifications.filter(n => n.notification_type === 'case_update').length})
             </button>
             <button
-              onClick={() => setSelectedType('payment')}
+              onClick={() => setSelectedType('payment_update')}
               className={`py-4 px-6 border-b-2 font-medium text-sm whitespace-nowrap ${
-                selectedType === 'payment'
+                selectedType === 'payment_update'
                   ? 'border-blue-600 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
               <CreditCard className="inline mr-2" size={16} />
-              Ödeme ({notifications.filter(n => n.type === 'payment').length})
+              Ödeme ({notifications.filter(n => n.notification_type === 'payment_update').length})
             </button>
             <button
-              onClick={() => setSelectedType('document')}
+              onClick={() => setSelectedType('document_upload')}
               className={`py-4 px-6 border-b-2 font-medium text-sm whitespace-nowrap ${
-                selectedType === 'document'
+                selectedType === 'document_upload'
                   ? 'border-blue-600 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
               <FileText className="inline mr-2" size={16} />
-              Belge ({notifications.filter(n => n.type === 'document').length})
-            </button>
-            <button
-              onClick={() => setSelectedType('system')}
-              className={`py-4 px-6 border-b-2 font-medium text-sm whitespace-nowrap ${
-                selectedType === 'system'
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              <Info className="inline mr-2" size={16} />
-              Sistem ({notifications.filter(n => n.type === 'system').length})
+              Belge ({notifications.filter(n => n.notification_type === 'document_upload').length})
             </button>
           </nav>
         </div>
@@ -254,7 +158,9 @@ export default function NotificationsPage() {
 
       {/* Notifications List */}
       <div className="space-y-4">
-        {filteredNotifications.length === 0 ? (
+        {isLoading ? (
+          <div className="text-center py-12">Yükleniyor...</div>
+        ) : filteredNotifications.length === 0 ? (
           <div className="bg-white rounded-xl shadow-sm p-12 text-center">
             <Bell className="mx-auto h-12 w-12 text-gray-400 mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">Bildirim Yok</h3>
@@ -265,12 +171,12 @@ export default function NotificationsPage() {
             <div
               key={notification.id}
               className={`bg-white rounded-xl shadow-sm p-6 transition-all hover:shadow-md ${
-                !notification.read ? 'border-l-4 border-blue-600' : ''
+                !notification.is_read ? 'border-l-4 border-blue-600' : ''
               }`}
             >
               <div className="flex items-start gap-4">
                 <div className="flex-shrink-0 p-3 bg-gray-50 rounded-lg">
-                  {getIcon(notification.type)}
+                  {getIcon(notification.notification_type)}
                 </div>
                 
                 <div className="flex-1 min-w-0">
@@ -281,7 +187,7 @@ export default function NotificationsPage() {
                       </h3>
                       {getPriorityBadge(notification.priority)}
                     </div>
-                    {!notification.read && (
+                    {!notification.is_read && (
                       <span className="flex-shrink-0 w-2 h-2 bg-blue-600 rounded-full mt-2"></span>
                     )}
                   </div>
@@ -291,26 +197,19 @@ export default function NotificationsPage() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center text-sm text-gray-500">
                       <Calendar size={14} className="mr-2" />
-                      {formatDate(notification.date)}
+                      {format(new Date(notification.created_at), 'd MMMM yyyy HH:mm', { locale: tr })}
                     </div>
                     
                     <div className="flex items-center gap-2">
-                      {!notification.read && (
+                      {!notification.is_read && (
                         <button
-                          onClick={() => markAsRead(notification.id)}
+                          onClick={() => markAsReadMutation.mutate(notification.id)}
                           className="inline-flex items-center gap-1 px-3 py-1 text-sm text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors"
                         >
                           <Check size={16} />
                           Okundu İşaretle
                         </button>
                       )}
-                      <button
-                        onClick={() => deleteNotification(notification.id)}
-                        className="inline-flex items-center gap-1 px-3 py-1 text-sm text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors"
-                      >
-                        <Trash2 size={16} />
-                        Sil
-                      </button>
                     </div>
                   </div>
                 </div>

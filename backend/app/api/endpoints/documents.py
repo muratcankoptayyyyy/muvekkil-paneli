@@ -9,6 +9,8 @@ from app.models.user import User
 from app.models.document import Document, DocumentType
 from app.models.case import Case
 from app.api.endpoints.auth import get_current_user
+from app.services.notification import create_notification, notify_admins
+from app.models.notification import NotificationType, NotificationPriority
 from app.core.permissions import (
     can_access_document,
     can_upload_document,
@@ -107,6 +109,50 @@ async def upload_document(
     db.commit()
     db.refresh(document)
     
+    # Bildirim oluştur
+    if case_id:
+        # Eğer bir davaya yüklendiyse
+        case = db.query(Case).filter(Case.id == case_id).first()
+        if case:
+            # Yükleyen admin/avukat ise müvekkile bildirim gönder
+            if is_admin_or_lawyer(current_user) and case.client_id and is_visible_to_client:
+                await create_notification(
+                    db=db,
+                    user_id=case.client_id,
+                    title="Yeni Evrak Yüklendi",
+                    message=f"{case.case_number} numaralı dosyanıza yeni bir evrak yüklendi: {file.filename}",
+                    type=NotificationType.DOCUMENT_UPLOAD,
+                    priority=NotificationPriority.MEDIUM,
+                    related_entity_type="document",
+                    related_entity_id=document.id,
+                    case_id=case.id
+                )
+            
+            # Yükleyen müvekkil ise adminlere bildirim gönder
+            elif not is_admin_or_lawyer(current_user):
+                await notify_admins(
+                    db=db,
+                    title="Müvekkil Evrak Yükledi",
+                    message=f"{current_user.full_name}, {case.case_number} numaralı dosyaya evrak yükledi: {file.filename}",
+                    type=NotificationType.DOCUMENT_UPLOAD,
+                    priority=NotificationPriority.MEDIUM,
+                    related_entity_type="document",
+                    related_entity_id=document.id,
+                    case_id=case.id
+                )
+    else:
+        # Dava dışı evrak yüklendiyse ve yükleyen client ise adminlere bildir
+        if not is_admin_or_lawyer(current_user):
+            await notify_admins(
+                db=db,
+                title="Müvekkil Evrak Yükledi",
+                message=f"{current_user.full_name} sisteme yeni bir evrak yükledi: {file.filename}",
+                type=NotificationType.DOCUMENT_UPLOAD,
+                priority=NotificationPriority.MEDIUM,
+                related_entity_type="document",
+                related_entity_id=document.id
+            )
+
     # Audit log
     await log_audit(
         db=db,

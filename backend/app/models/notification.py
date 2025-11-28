@@ -9,6 +9,10 @@ class NotificationType(str, enum.Enum):
     SMS = "sms"
     PUSH = "push"
     IN_APP = "in_app"
+    CASE_UPDATE = "case_update"
+    DOCUMENT_UPLOAD = "document_upload"
+    PAYMENT_UPDATE = "payment_update"
+    SYSTEM = "system"
 
 class NotificationPriority(str, enum.Enum):
     LOW = "low"

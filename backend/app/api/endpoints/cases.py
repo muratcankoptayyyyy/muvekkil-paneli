@@ -7,6 +7,8 @@ from app.models.user import User
 from app.models.case import Case
 from app.schemas.case import CaseCreate, CaseUpdate, CaseResponse, CaseListResponse
 from app.api.endpoints.auth import get_current_user
+from app.services.notification import create_notification, notify_admins
+from app.models.notification import NotificationType, NotificationPriority
 
 router = APIRouter()
 
@@ -26,16 +28,60 @@ async def create_case(
             detail="Case number already exists"
         )
     
+    # Determine client_id
+    client_id = current_user.id
+    if current_user.user_type in ["admin", "lawyer"]:
+        if case_data.client_id:
+            # Verify client exists
+            client = db.query(User).filter(User.id == case_data.client_id).first()
+            if not client:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Client not found"
+                )
+            client_id = case_data.client_id
+        else:
+            # Admin/Lawyer must specify client_id (or we could default to themselves, but that's weird for a case)
+            # Let's allow them to create for themselves if they really want, but usually they shouldn't.
+            # For now, let's keep it flexible: if not provided, use current_user.id (which might be the lawyer)
+            pass
+
     # Create new case
+    case_dict = case_data.model_dump(exclude={"client_id"})
     db_case = Case(
-        **case_data.model_dump(),
-        client_id=current_user.id
+        **case_dict,
+        client_id=client_id
     )
     
     db.add(db_case)
     db.commit()
     db.refresh(db_case)
+
+    # Bildirim oluştur
+    if db_case.client_id:
+        await create_notification(
+            db=db,
+            user_id=db_case.client_id,
+            title="Yeni Dava Dosyası Açıldı",
+            message=f"{db_case.case_number} numaralı dava dosyanız oluşturuldu.",
+            type=NotificationType.CASE_UPDATE,
+            priority=NotificationPriority.HIGH,
+            related_entity_type="case",
+            related_entity_id=db_case.id
+        )
     
+    # Adminlere de bildirim gönder (oluşturan kişi admin değilse)
+    if not current_user.is_admin:
+        await notify_admins(
+            db=db,
+            title="Yeni Dava Başvurusu",
+            message=f"{current_user.full_name} yeni bir dava dosyası oluşturdu: {db_case.case_number}",
+            type=NotificationType.CASE_UPDATE,
+            priority=NotificationPriority.MEDIUM,
+            related_entity_type="case",
+            related_entity_id=db_case.id
+        )
+
     return db_case
 
 @router.get("/", response_model=CaseListResponse)

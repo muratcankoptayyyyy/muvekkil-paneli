@@ -1,8 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Form
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from datetime import timedelta
-from typing import Annotated
+from typing import Annotated, Optional
+import pyotp
+import qrcode
+import io
+import base64
 
 from app.core.database import get_db
 from app.core.security import verify_password, get_password_hash, create_access_token, decode_access_token
@@ -47,6 +51,7 @@ def get_current_user(
 @router.post("/login", response_model=LoginResponse)
 async def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
+    otp_code: Optional[str] = Form(None),
     db: Session = Depends(get_db)
 ):
     """
@@ -79,6 +84,23 @@ async def login(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Hesabınız aktif değil. Lütfen avukatınızla iletişime geçin."
         )
+
+    # 2FA Check
+    if user.is_2fa_enabled:
+        if not otp_code:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="2FA code required",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        
+        totp = pyotp.TOTP(user.totp_secret)
+        if not totp.verify(otp_code):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid 2FA code",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
     
     # Create access token
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
@@ -171,3 +193,70 @@ async def create_user(
     db.refresh(db_user)
     
     return db_user
+
+@router.post("/2fa/setup")
+async def setup_2fa(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Generate 2FA secret and QR code"""
+    if current_user.is_2fa_enabled:
+        raise HTTPException(status_code=400, detail="2FA is already enabled")
+    
+    # Generate secret if not exists
+    if not current_user.totp_secret:
+        current_user.totp_secret = pyotp.random_base32()
+        db.commit()
+    
+    # Generate QR code
+    totp = pyotp.TOTP(current_user.totp_secret)
+    provisioning_uri = totp.provisioning_uri(name=current_user.email, issuer_name="Muvekkil Paneli")
+    
+    # Create QR code image
+    img = qrcode.make(provisioning_uri)
+    buffered = io.BytesIO()
+    img.save(buffered, format="PNG")
+    img_str = base64.b64encode(buffered.getvalue()).decode()
+    
+    return {
+        "secret": current_user.totp_secret,
+        "qr_code": f"data:image/png;base64,{img_str}",
+        "provisioning_uri": provisioning_uri
+    }
+
+@router.post("/2fa/verify")
+async def verify_2fa_setup(
+    code: str = Form(...),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Verify 2FA setup and enable it"""
+    if current_user.is_2fa_enabled:
+        raise HTTPException(status_code=400, detail="2FA is already enabled")
+    
+    if not current_user.totp_secret:
+        raise HTTPException(status_code=400, detail="2FA setup not initiated")
+    
+    totp = pyotp.TOTP(current_user.totp_secret)
+    if totp.verify(code):
+        current_user.is_2fa_enabled = True
+        db.commit()
+        return {"message": "2FA enabled successfully"}
+    else:
+        raise HTTPException(status_code=400, detail="Invalid code")
+
+@router.post("/2fa/disable")
+async def disable_2fa(
+    code: str = Form(...),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Disable 2FA"""
+    if not current_user.is_2fa_enabled:
+        raise HTTPException(status_code=400, detail="2FA is not enabled")
+    
+    totp = pyotp.TOTP(current_user.totp_secret)
+    if totp.verify(code):
+        current_user.is_2fa_enabled = False
+        current_user.totp_secret = None # Optional: clear secret
+        db.commit()
+        return {"message": "2FA disabled successfully"}
+    else:
+        raise HTTPException(status_code=400, detail="Invalid code")

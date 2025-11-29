@@ -27,6 +27,7 @@ class UserResponse(UserBase):
     id: int
     is_active: bool
     is_verified: bool
+    is_2fa_enabled: bool = False
     created_at: datetime
     last_login: Optional[datetime] = None
     tc_kimlik: Optional[str] = None

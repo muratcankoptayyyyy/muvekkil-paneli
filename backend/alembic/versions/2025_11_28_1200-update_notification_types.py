@@ -18,18 +18,13 @@ depends_on = None
 
 def upgrade() -> None:
     # PostgreSQL specific command to add values to enum
-    # We need to execute this in a transaction block usually, but ALTER TYPE cannot run inside a transaction block 
-    # in some older Postgres versions. However, in newer ones it can.
-    # But Alembic runs in a transaction by default.
-    # To be safe, we can use op.execute with commit if needed, but usually just op.execute works for newer PG.
-    
-    # Note: 'ALTER TYPE ... ADD VALUE' cannot be rolled back in a transaction.
-    
-    with op.get_context().autocommit_block():
-        op.execute("ALTER TYPE notificationtype ADD VALUE IF NOT EXISTS 'CASE_UPDATE'")
-        op.execute("ALTER TYPE notificationtype ADD VALUE IF NOT EXISTS 'DOCUMENT_UPLOAD'")
-        op.execute("ALTER TYPE notificationtype ADD VALUE IF NOT EXISTS 'PAYMENT_UPDATE'")
-        op.execute("ALTER TYPE notificationtype ADD VALUE IF NOT EXISTS 'SYSTEM'")
+    bind = op.get_bind()
+    if bind.engine.name == 'postgresql':
+        with op.get_context().autocommit_block():
+            op.execute("ALTER TYPE notificationtype ADD VALUE IF NOT EXISTS 'CASE_UPDATE'")
+            op.execute("ALTER TYPE notificationtype ADD VALUE IF NOT EXISTS 'DOCUMENT_UPLOAD'")
+            op.execute("ALTER TYPE notificationtype ADD VALUE IF NOT EXISTS 'PAYMENT_UPDATE'")
+            op.execute("ALTER TYPE notificationtype ADD VALUE IF NOT EXISTS 'SYSTEM'")
 
 
 def downgrade() -> None:

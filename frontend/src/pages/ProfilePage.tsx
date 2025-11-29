@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useAuthStore } from '../store/authStore'
+import { authApi } from '../services/api'
 import { 
   User, 
   Mail, 
@@ -17,12 +18,18 @@ import {
 } from 'lucide-react'
 
 export default function ProfilePage() {
-  const { user } = useAuthStore()
+  const { user, token, setAuth } = useAuthStore()
   const [activeTab, setActiveTab] = useState<'profile' | 'security' | 'notifications'>('profile')
   const [isEditing, setIsEditing] = useState(false)
   const [showCurrentPassword, setShowCurrentPassword] = useState(false)
   const [showNewPassword, setShowNewPassword] = useState(false)
   const [successMessage, setSuccessMessage] = useState('')
+
+  // 2FA State
+  const [qrCode, setQrCode] = useState('')
+  const [setupCode, setSetupCode] = useState('')
+  const [disableCode, setDisableCode] = useState('')
+  const [showDisableConfirm, setShowDisableConfirm] = useState(false)
 
   // Profile Form State
   const [profileForm, setProfileForm] = useState({
@@ -30,9 +37,7 @@ export default function ProfilePage() {
     email: user?.email || '',
     phone: user?.phone || '',
     company_name: user?.company_name || '',
-    address: '',
-    city: '',
-    postal_code: ''
+    address: user?.address || '',
   })
 
   // Password Form State
@@ -52,11 +57,18 @@ export default function ProfilePage() {
     hearingReminders: true
   })
 
-  const handleProfileSave = () => {
-    // API call to update profile
-    setSuccessMessage('Profil bilgileriniz başarıyla güncellendi')
-    setIsEditing(false)
-    setTimeout(() => setSuccessMessage(''), 3000)
+  const handleProfileSave = async () => {
+    try {
+      const updatedUser = await authApi.updateProfile(profileForm)
+      if (token) {
+        setAuth(updatedUser, token)
+      }
+      setSuccessMessage('Profil bilgileriniz başarıyla güncellendi')
+      setIsEditing(false)
+      setTimeout(() => setSuccessMessage(''), 3000)
+    } catch (error: any) {
+      alert('Hata: ' + (error.response?.data?.detail || 'Profil güncellenemedi'))
+    }
   }
 
   const handlePasswordChange = () => {
@@ -74,6 +86,39 @@ export default function ProfilePage() {
     // API call to update notification settings
     setSuccessMessage('Bildirim ayarlarınız başarıyla güncellendi')
     setTimeout(() => setSuccessMessage(''), 3000)
+  }
+
+  const handleStart2FA = async () => {
+    try {
+      const data = await authApi.setup2FA()
+      setQrCode(data.qr_code)
+    } catch (error) {
+      alert('2FA kurulumu başlatılamadı')
+    }
+  }
+
+  const handleVerify2FA = async () => {
+    try {
+      await authApi.verify2FA(setupCode)
+      setSuccessMessage('2FA başarıyla etkinleştirildi')
+      setQrCode('')
+      setSetupCode('')
+      window.location.reload()
+    } catch (error) {
+      alert('Doğrulama başarısız')
+    }
+  }
+
+  const handleDisable2FA = async () => {
+    try {
+      await authApi.disable2FA(disableCode)
+      setSuccessMessage('2FA devre dışı bırakıldı')
+      setShowDisableConfirm(false)
+      setDisableCode('')
+      window.location.reload()
+    } catch (error) {
+      alert('Devre dışı bırakılamadı')
+    }
   }
 
   return (
@@ -270,34 +315,6 @@ export default function ProfilePage() {
                 placeholder="Adres bilginizi giriniz"
               />
             </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Şehir
-              </label>
-              <input
-                type="text"
-                value={profileForm.city}
-                onChange={(e) => setProfileForm({ ...profileForm, city: e.target.value })}
-                disabled={!isEditing}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-500"
-                placeholder="Ankara"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Posta Kodu
-              </label>
-              <input
-                type="text"
-                value={profileForm.postal_code}
-                onChange={(e) => setProfileForm({ ...profileForm, postal_code: e.target.value })}
-                disabled={!isEditing}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-500"
-                placeholder="06000"
-              />
-            </div>
           </div>
 
           {user?.tc_kimlik && (
@@ -410,6 +427,109 @@ export default function ProfilePage() {
                   </ul>
                 </div>
               </div>
+            </div>
+
+            {/* 2FA Section */}
+            <div className="mt-8 pt-8 border-t border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">İki Faktörlü Doğrulama (2FA)</h3>
+              
+              {!user?.is_2fa_enabled ? (
+                !qrCode ? (
+                  <div>
+                    <p className="text-gray-600 mb-4">
+                      Hesabınızı daha güvenli hale getirmek için iki faktörlü doğrulamayı etkinleştirin.
+                    </p>
+                    <button
+                      onClick={handleStart2FA}
+                      className="flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                    >
+                      <Shield size={18} />
+                      2FA Etkinleştir
+                    </button>
+                  </div>
+                ) : (
+                  <div className="bg-gray-50 p-6 rounded-lg">
+                    <h4 className="font-medium text-gray-900 mb-4">QR Kodu Taratın</h4>
+                    <div className="flex flex-col md:flex-row gap-6 items-center">
+                      <div className="bg-white p-2 rounded shadow-sm">
+                        <img src={qrCode} alt="2FA QR Code" className="w-48 h-48" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm text-gray-600 mb-4">
+                          Google Authenticator veya benzeri bir uygulama ile QR kodu taratın ve üretilen kodu aşağıya girin.
+                        </p>
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={setupCode}
+                            onChange={(e) => setSetupCode(e.target.value)}
+                            placeholder="000000"
+                            className="w-32 px-4 py-2 border border-gray-300 rounded-lg text-center tracking-widest"
+                            maxLength={6}
+                          />
+                          <button
+                            onClick={handleVerify2FA}
+                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                          >
+                            Doğrula
+                          </button>
+                          <button
+                            onClick={() => setQrCode('')}
+                            className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                          >
+                            İptal
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )
+              ) : (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <CheckCircle className="text-green-600" size={24} />
+                    <div>
+                      <h4 className="font-semibold text-green-900">2FA Etkin</h4>
+                      <p className="text-sm text-green-800">Hesabınız iki faktörlü doğrulama ile korunuyor.</p>
+                    </div>
+                  </div>
+                  
+                  {!showDisableConfirm ? (
+                    <button
+                      onClick={() => setShowDisableConfirm(true)}
+                      className="text-red-600 text-sm hover:underline font-medium"
+                    >
+                      Devre Dışı Bırak
+                    </button>
+                  ) : (
+                    <div className="mt-4">
+                      <p className="text-sm text-gray-700 mb-2">Devre dışı bırakmak için kodu girin:</p>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={disableCode}
+                          onChange={(e) => setDisableCode(e.target.value)}
+                          placeholder="000000"
+                          className="w-32 px-4 py-2 border border-gray-300 rounded-lg text-center tracking-widest"
+                          maxLength={6}
+                        />
+                        <button
+                          onClick={handleDisable2FA}
+                          className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                        >
+                          Onayla
+                        </button>
+                        <button
+                          onClick={() => setShowDisableConfirm(false)}
+                          className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                        >
+                          İptal
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>

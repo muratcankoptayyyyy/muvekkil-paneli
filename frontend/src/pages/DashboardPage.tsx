@@ -9,7 +9,7 @@ export default function DashboardPage() {
       title: 'Aktif Dosyalar',
       value: '3',
       icon: FileText,
-      color: 'bg-blue-500',
+      color: 'bg-brand-500',
     },
     {
       title: 'Bekleyen Ödemeler',
@@ -104,7 +104,7 @@ export default function DashboardPage() {
           </h2>
           <div className="space-y-4">
             <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg">
-              <div className="bg-blue-600 text-white rounded-lg p-2 text-center min-w-[60px]">
+              <div className="bg-brand-600 text-white rounded-lg p-2 text-center min-w-[60px]">
                 <div className="text-2xl font-bold">28</div>
                 <div className="text-xs">Ekim</div>
               </div>

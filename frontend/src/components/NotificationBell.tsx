@@ -78,11 +78,11 @@ export default function NotificationBell() {
 
         return (
           <>
-            <Popover.Button className="relative p-2 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 rounded-full">
+            <Popover.Button className="relative p-2 text-brand-100 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-brand-600 rounded-full">
               <span className="sr-only">Bildirimleri görüntüle</span>
               <Bell className="h-6 w-6" aria-hidden="true" />
               {unreadCount > 0 && (
-                <span className="absolute top-1 right-1 block h-4 w-4 rounded-full bg-red-500 text-xs text-white text-center leading-4 font-bold ring-2 ring-white">
+                <span className="absolute top-1 right-1 block h-4 w-4 rounded-full bg-red-500 text-xs text-white text-center leading-4 font-bold ring-2 ring-brand-600">
                   {unreadCount > 9 ? '9+' : unreadCount}
                 </span>
               )}
@@ -102,7 +102,7 @@ export default function NotificationBell() {
                   {unreadCount > 0 && (
                     <button
                       onClick={() => markAllAsReadMutation.mutate()}
-                      className="text-xs text-indigo-600 hover:text-indigo-500 font-medium"
+                      className="text-xs text-brand-600 hover:text-brand-500 font-medium"
                     >
                       Tümünü Okundu İşaretle
                     </button>
@@ -120,7 +120,7 @@ export default function NotificationBell() {
                         <div
                           key={notification.id}
                           className={`px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors ${
-                            !notification.is_read ? 'bg-blue-50/50' : ''
+                            !notification.is_read ? 'bg-brand-50/50' : ''
                           }`}
                           onClick={() => handleNotificationClick(notification)}
                         >
@@ -141,7 +141,7 @@ export default function NotificationBell() {
                             </div>
                             {!notification.is_read && (
                               <div className="flex-shrink-0 self-center">
-                                <div className="h-2 w-2 rounded-full bg-blue-600"></div>
+                                <div className="h-2 w-2 rounded-full bg-brand-600"></div>
                               </div>
                             )}
                           </div>

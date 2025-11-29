@@ -3,6 +3,7 @@ import { useAuthStore } from './store/authStore'
 import LoginPage from './pages/LoginPage'
 import DashboardPage from './pages/DashboardPage'
 import CasesPage from './pages/CasesPage'
+import CaseDetailPage from './pages/CaseDetailPage'
 import DocumentsPage from './pages/DocumentsPage'
 import PaymentsPage from './pages/PaymentsPage'
 import NotificationsPage from './pages/NotificationsPage'
@@ -12,6 +13,7 @@ import Layout from './components/Layout'
 // Admin pages
 import AdminDashboardPage from './pages/admin/AdminDashboardPage'
 import AdminClientsPage from './pages/admin/AdminClientsPage'
+import AdminClientCreatePage from './pages/admin/AdminClientCreatePage'
 import AdminCasesPage from './pages/admin/AdminCasesPage'
 import AdminCaseCreatePage from './pages/admin/AdminCaseCreatePage'
 import AdminDocumentsUploadPage from './pages/admin/AdminDocumentsUploadPage'
@@ -37,6 +39,10 @@ function App() {
           <Route
             path="/admin/clients"
             element={isAuthenticated ? <AdminClientsPage /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/admin/clients/new"
+            element={isAuthenticated ? <AdminClientCreatePage /> : <Navigate to="/login" />}
           />
           <Route
             path="/admin/cases"
@@ -66,6 +72,10 @@ function App() {
         <Route
           path="/cases"
           element={isAuthenticated ? <CasesPage /> : <Navigate to="/login" />}
+        />
+        <Route
+          path="/cases/:id"
+          element={isAuthenticated ? <CaseDetailPage /> : <Navigate to="/login" />}
         />
         <Route
           path="/documents"

@@ -11,6 +11,8 @@ export default function LoginPage() {
   const { setAuth } = useAuthStore()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
+  const [show2FA, setShow2FA] = useState(false)
+  const [otpCode, setOtpCode] = useState('')
 
   const loginMutation = useMutation({
     mutationFn: authApi.login,
@@ -25,13 +27,17 @@ export default function LoginPage() {
       }
     },
     onError: (error: any) => {
-      alert(error.response?.data?.detail || 'Giriş başarısız')
+      if (error.response?.status === 401 && error.response?.data?.detail === "2FA code required") {
+        setShow2FA(true)
+      } else {
+        alert(error.response?.data?.detail || 'Giriş başarısız')
+      }
     },
   })
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    loginMutation.mutate({ email: username, password })
+    loginMutation.mutate({ email: username, password, otp_code: otpCode })
   }
 
   return (
@@ -45,50 +51,72 @@ export default function LoginPage() {
               <LogIn className="text-white" size={32} />
             </div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Hoş Geldiniz
+              {show2FA ? '2FA Doğrulama' : 'Hoş Geldiniz'}
             </h1>
             <p className="text-gray-600">
-              Müvekkil panelinize giriş yapın
+              {show2FA ? 'Lütfen doğrulama kodunu giriniz' : 'Müvekkil paneli giriş'}
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
-                Kullanıcı Adı
-              </label>
-              <input
-                id="username"
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg outline-none transition"
-                onFocus={(e) => e.target.style.borderColor = '#548c8d'}
-                onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
-                placeholder="TC Kimlik No, Vergi No veya Email"
-              />
-              <p className="mt-1 text-xs text-gray-500">
-                TC Kimlik No, Vergi No veya Email ile giriş yapabilirsiniz
-              </p>
-            </div>
+            {!show2FA ? (
+              <>
+                <div>
+                  <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
+                    Kullanıcı Adı
+                  </label>
+                  <input
+                    id="username"
+                    type="text"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    required
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg outline-none transition"
+                    onFocus={(e) => e.target.style.borderColor = '#548c8d'}
+                    onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
+                    placeholder="TC Kimlik No, Vergi No veya Email"
+                  />
+                  <p className="mt-1 text-xs text-gray-500">
+                    TC Kimlik No, Vergi No veya Email ile giriş yapabilirsiniz
+                  </p>
+                </div>
 
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-                Şifre
-              </label>
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg outline-none transition"
-                onFocus={(e) => e.target.style.borderColor = '#548c8d'}
-                onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
-                placeholder="••••••••"
-              />
-            </div>
+                <div>
+                  <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                    Şifre
+                  </label>
+                  <input
+                    id="password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg outline-none transition"
+                    onFocus={(e) => e.target.style.borderColor = '#548c8d'}
+                    onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
+                    placeholder="••••••••"
+                  />
+                </div>
+              </>
+            ) : (
+              <div>
+                <label htmlFor="otp" className="block text-sm font-medium text-gray-700 mb-2">
+                  Doğrulama Kodu
+                </label>
+                <input
+                  id="otp"
+                  type="text"
+                  value={otpCode}
+                  onChange={(e) => setOtpCode(e.target.value)}
+                  required
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg outline-none transition text-center text-2xl tracking-widest"
+                  onFocus={(e) => e.target.style.borderColor = '#548c8d'}
+                  onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
+                  placeholder="000000"
+                  maxLength={6}
+                />
+              </div>
+            )}
 
             <button
               type="submit"
@@ -98,8 +126,18 @@ export default function LoginPage() {
               onMouseEnter={(e) => !loginMutation.isPending && (e.currentTarget.style.backgroundColor = '#3d6566')}
               onMouseLeave={(e) => !loginMutation.isPending && (e.currentTarget.style.backgroundColor = '#548c8d')}
             >
-              {loginMutation.isPending ? 'Giriş yapılıyor...' : 'Giriş Yap'}
+              {loginMutation.isPending ? 'Giriş yapılıyor...' : (show2FA ? 'Doğrula' : 'Giriş Yap')}
             </button>
+            
+            {show2FA && (
+              <button
+                type="button"
+                onClick={() => setShow2FA(false)}
+                className="w-full text-gray-600 text-sm hover:underline"
+              >
+                Geri Dön
+              </button>
+            )}
           </form>
 
           <div className="mt-6 text-center text-sm text-gray-600">

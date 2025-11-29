@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import api from '../../services/api'
-import { Search, Users, Building2, User, Eye } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Search, Users, Building2, User, Eye, Plus } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
 
 export default function AdminClientsPage() {
+  const navigate = useNavigate()
   const [search, setSearch] = useState('')
   const [userType, setUserType] = useState<string>('')
 
@@ -16,7 +17,8 @@ export default function AdminClientsPage() {
       if (userType) params.append('user_type', userType)
       
       const response = await api.get(`/admin/clients?${params}`)
-      return response.data
+      // Backend returns list directly, not paginated object with items
+      return Array.isArray(response.data) ? response.data : response.data.items || []
     },
   })
 
@@ -36,9 +38,18 @@ export default function AdminClientsPage() {
 
   return (
     <div>
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Müvekkiller</h1>
-        <p className="text-gray-600">Tüm müvekkilleri görüntüle ve yönet</p>
+      <div className="mb-8 flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Müvekkiller</h1>
+          <p className="text-gray-600">Tüm müvekkilleri görüntüle ve yönet</p>
+        </div>
+        <button
+          onClick={() => navigate('/admin/clients/new')}
+          className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+        >
+          <Plus size={20} />
+          Yeni Müvekkil Ekle
+        </button>
       </div>
 
       {/* Filtreler */}
@@ -99,7 +110,7 @@ export default function AdminClientsPage() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {clients?.items?.map((client: any) => {
+              {clients?.map((client: any) => {
                 const TypeIcon = getUserTypeIcon(client.user_type)
                 return (
                   <tr key={client.id} className="hover:bg-gray-50">
@@ -110,10 +121,10 @@ export default function AdminClientsPage() {
                         </div>
                         <div className="ml-4">
                           <div className="text-sm font-medium text-gray-900">
-                            {client.name}
+                            {client.full_name || client.company_name}
                           </div>
                           <div className="text-sm text-gray-500">
-                            ID: {client.id.slice(0, 8)}
+                            ID: {client.id}
                           </div>
                         </div>
                       </div>
@@ -145,7 +156,7 @@ export default function AdminClientsPage() {
             </tbody>
           </table>
 
-          {clients?.items?.length === 0 && (
+          {clients?.length === 0 && (
             <div className="text-center py-12">
               <Users className="mx-auto h-12 w-12 text-gray-400" />
               <h3 className="mt-2 text-sm font-medium text-gray-900">

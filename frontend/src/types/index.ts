@@ -7,16 +7,20 @@ export interface User {
   user_type: 'individual' | 'corporate' | 'admin' | 'lawyer'
   is_active: boolean
   is_verified: boolean
+  is_2fa_enabled: boolean
   created_at: string
   last_login?: string
   tc_kimlik?: string
   tax_number?: string
   company_name?: string
+  address?: string
+  bank_account_info?: string
 }
 
 export interface LoginRequest {
   email: string
   password: string
+  otp_code?: string
 }
 
 export interface LoginResponse {
@@ -40,6 +44,13 @@ export interface RegisterRequest {
 export type CaseStatus = 'pending' | 'in_progress' | 'waiting_court' | 'completed' | 'archived'
 export type CaseType = 'civil' | 'criminal' | 'commercial' | 'labor' | 'administrative' | 'execution' | 'other'
 
+export interface CaseStage {
+  id: string
+  title: string
+  status: 'pending' | 'current' | 'completed'
+  order: number
+}
+
 export interface Case {
   id: number
   case_number: string
@@ -55,6 +66,20 @@ export interface Case {
   completion_date?: string
   created_at: string
   updated_at?: string
+  stages?: CaseStage[]
+}
+
+export type TimelineEventType = 'HEARING' | 'REPORT' | 'DECISION' | 'PAYMENT' | 'DOCUMENT' | 'GENERIC'
+
+export interface TimelineEvent {
+  id: number
+  case_id: number
+  title: string
+  description?: string
+  event_date: string
+  event_type: TimelineEventType
+  stage_id?: string
+  created_at: string
 }
 
 export interface CaseCreate {
@@ -65,6 +90,11 @@ export interface CaseCreate {
   court_name?: string
   file_number?: string
   next_hearing_date?: string
+}
+
+export interface CaseUpdate extends Partial<CaseCreate> {
+  status?: CaseStatus
+  completion_date?: string
 }
 
 // Document types

@@ -1,9 +1,11 @@
 import { useQuery } from '@tanstack/react-query'
+import { useNavigate } from 'react-router-dom'
 import api from '../services/api'
 import { FileText, Calendar, Scale } from 'lucide-react'
 import type { Case } from '../types'
 
 export default function CasesPage() {
+  const navigate = useNavigate()
   const { data: casesData, isLoading } = useQuery({
     queryKey: ['cases'],
     queryFn: async () => {
@@ -127,7 +129,10 @@ export default function CasesPage() {
               </div>
 
               <div className="mt-4 pt-4 border-t border-gray-100">
-                <button className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors text-sm font-semibold">
+                <button 
+                  onClick={() => navigate(`/cases/${caseItem.id}`)}
+                  className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors text-sm font-semibold"
+                >
                   Detayları Görüntüle
                 </button>
               </div>

@@ -1,7 +1,13 @@
 from pydantic import BaseModel, Field
-from typing import Optional, List
+from typing import Optional, List, Any, Dict
 from datetime import datetime
 from app.models.case import CaseStatus, CaseType
+
+class CaseStage(BaseModel):
+    id: str
+    title: str
+    status: str = "pending" # pending, current, completed
+    order: int
 
 class CaseBase(BaseModel):
     title: str
@@ -9,6 +15,7 @@ class CaseBase(BaseModel):
     case_type: CaseType
     court_name: Optional[str] = None
     file_number: Optional[str] = None
+    stages: Optional[List[CaseStage]] = None
 
 class CaseCreate(CaseBase):
     case_number: str
@@ -23,6 +30,7 @@ class CaseUpdate(BaseModel):
     court_name: Optional[str] = None
     file_number: Optional[str] = None
     next_hearing_date: Optional[datetime] = None
+    stages: Optional[List[CaseStage]] = None
 
 class CaseResponse(CaseBase):
     id: int
@@ -34,6 +42,7 @@ class CaseResponse(CaseBase):
     completion_date: Optional[datetime] = None
     created_at: datetime
     updated_at: Optional[datetime] = None
+    stages: Optional[List[CaseStage]] = None
     
     class Config:
         from_attributes = True

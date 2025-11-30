@@ -15,13 +15,18 @@ class UserCreate(UserBase):
     tc_kimlik: Optional[str] = None
     tax_number: Optional[str] = None
     company_name: Optional[str] = None
+    address: Optional[str] = None
+    bank_account_info: Optional[str] = None
 
 class UserUpdate(BaseModel):
+    email: Optional[EmailStr] = None
     full_name: Optional[str] = None
     phone: Optional[str] = None
     tc_kimlik: Optional[str] = None
     tax_number: Optional[str] = None
     company_name: Optional[str] = None
+    address: Optional[str] = None
+    bank_account_info: Optional[str] = None
 
 class UserResponse(UserBase):
     id: int
@@ -33,6 +38,8 @@ class UserResponse(UserBase):
     tc_kimlik: Optional[str] = None
     tax_number: Optional[str] = None
     company_name: Optional[str] = None
+    address: Optional[str] = None
+    bank_account_info: Optional[str] = None
     
     class Config:
         from_attributes = True

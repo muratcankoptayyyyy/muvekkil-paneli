@@ -2,14 +2,18 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query, Request
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from datetime import datetime
+import secrets
+import string
+from pydantic import BaseModel, EmailStr
 
 from app.core.database import get_db
+from app.core.security import get_password_hash
 from app.models.user import User, UserType
 from app.models.case import Case, CaseStatus, CaseType
 from app.models.document import Document
 from app.models.payment import Payment, PaymentStatus
 from app.schemas.case import CaseCreate, CaseUpdate, CaseResponse
-from app.schemas.user import UserResponse
+from app.schemas.user import UserResponse, UserBase
 from app.api.endpoints.auth import get_current_user
 from app.core.permissions import (
     is_admin_or_lawyer,
@@ -324,4 +328,80 @@ async def get_statistics(
         "active_cases": active_cases,
         "total_documents": total_documents,
         "pending_payments": pending_payments
+    }
+
+class ClientCreateRequest(BaseModel):
+    full_name: str
+    email: Optional[EmailStr] = None
+    phone: Optional[str] = None
+    user_type: UserType = UserType.INDIVIDUAL
+    tc_kimlik: Optional[str] = None
+    tax_number: Optional[str] = None
+    company_name: Optional[str] = None
+    address: Optional[str] = None
+    bank_account_info: Optional[str] = None
+
+@router.post("/clients", response_model=dict)
+async def create_client(
+    client_in: ClientCreateRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+    request: Request = None
+):
+    """
+    Yeni müvekkil oluştur (Admin/Avukat)
+    Otomatik geçici şifre oluşturur ve döner.
+    """
+    if not is_admin_or_lawyer(current_user):
+        raise PermissionDenied()
+
+    # Check if email exists if provided
+    if client_in.email:
+        if db.query(User).filter(User.email == client_in.email).first():
+            raise HTTPException(
+                status_code=400,
+                detail="Email already registered"
+            )
+    else:
+        # Generate dummy email if not provided
+        # Format: no-email-{tc_or_tax_or_random}@system.local
+        identifier = client_in.tc_kimlik or client_in.tax_number or secrets.token_hex(4)
+        client_in.email = f"no-email-{identifier}@system.local"
+        
+        # Check if this dummy email exists (unlikely but possible)
+        while db.query(User).filter(User.email == client_in.email).first():
+             identifier = secrets.token_hex(4)
+             client_in.email = f"no-email-{identifier}@system.local"
+    
+    # Generate random password
+    alphabet = string.ascii_letters + string.digits
+    temp_password = ''.join(secrets.choice(alphabet) for i in range(10))
+    hashed_password = get_password_hash(temp_password)
+    
+    user_data = client_in.model_dump()
+    user = User(
+        **user_data,
+        hashed_password=hashed_password,
+        is_active=True,
+        is_verified=True # Admin created, so verified
+    )
+    
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    
+    # Audit log
+    await log_audit(
+        db=db,
+        user=current_user,
+        action="CREATE",
+        resource_type="CLIENT",
+        resource_id=user.id,
+        description=f"Created client {user.full_name}",
+        request=request
+    )
+    
+    return {
+        "user": user,
+        "temp_password": temp_password
     }

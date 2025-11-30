@@ -5,10 +5,13 @@ from typing import List
 from app.core.database import get_db
 from app.models.user import User
 from app.models.case import Case
+from app.models.timeline import TimelineEvent
 from app.schemas.case import CaseCreate, CaseUpdate, CaseResponse, CaseListResponse
+from app.schemas.timeline import TimelineEventResponse, TimelineEventCreate
 from app.api.endpoints.auth import get_current_user
 from app.services.notification import create_notification, notify_admins
 from app.models.notification import NotificationType, NotificationPriority
+from app.utils.case_stages import get_default_stages
 
 router = APIRouter()
 
@@ -48,9 +51,14 @@ async def create_case(
 
     # Create new case
     case_dict = case_data.model_dump(exclude={"client_id"})
+    
+    # Set default stages based on case type
+    stages = get_default_stages(case_data.case_type)
+    
     db_case = Case(
         **case_dict,
-        client_id=client_id
+        client_id=client_id,
+        stages=stages
     )
     
     db.add(db_case)
@@ -193,3 +201,41 @@ async def delete_case(
     db.commit()
     
     return None
+
+@router.get("/{case_id}/timeline", response_model=List[TimelineEventResponse])
+async def get_case_timeline(
+    case_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Dosya zaman çizelgesini getir"""
+    case = db.query(Case).filter(Case.id == case_id).first()
+    if not case:
+        raise HTTPException(status_code=404, detail="Case not found")
+        
+    if current_user.user_type not in ["admin", "lawyer"] and case.client_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not authorized")
+        
+    return db.query(TimelineEvent).filter(TimelineEvent.case_id == case_id).order_by(TimelineEvent.event_date.desc()).all()
+
+@router.post("/{case_id}/timeline", response_model=TimelineEventResponse)
+async def create_timeline_event(
+    case_id: int,
+    event_data: TimelineEventCreate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Dosyaya yeni olay ekle (Sadece Admin/Avukat)"""
+    if current_user.user_type not in ["admin", "lawyer"]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+        
+    case = db.query(Case).filter(Case.id == case_id).first()
+    if not case:
+        raise HTTPException(status_code=404, detail="Case not found")
+        
+    db_event = TimelineEvent(**event_data.model_dump())
+    db.add(db_event)
+    db.commit()
+    db.refresh(db_event)
+    
+    return db_event

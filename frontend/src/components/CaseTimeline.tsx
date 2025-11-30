@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { CaseStage, TimelineEvent } from '../types'
-import { CheckCircle, Circle, Clock, ChevronDown, ChevronUp, Calendar, FileText, Gavel } from 'lucide-react'
+import { CheckCircle, Circle, Clock, Calendar, FileText, Gavel } from 'lucide-react'
 import { format } from 'date-fns'
 import { tr } from 'date-fns/locale'
 
@@ -54,7 +54,7 @@ const CaseTimeline: React.FC<CaseTimelineProps> = ({ stages, events }) => {
       <div className="relative flex items-center justify-between w-full mb-8 overflow-x-auto pb-4">
         <div className="absolute top-1/2 left-0 w-full h-1 bg-gray-200 -z-10 transform -translate-y-1/2" />
         
-        {stages.sort((a, b) => a.order - b.order).map((stage, index) => (
+        {stages.sort((a, b) => a.order - b.order).map((stage) => (
           <div 
             key={stage.id}
             className={`flex flex-col items-center cursor-pointer min-w-[100px] ${

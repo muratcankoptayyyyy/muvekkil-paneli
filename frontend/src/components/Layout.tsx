@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import { LogOut, FileText, Home, Bell, CreditCard, User, Users, Briefcase, Upload, DollarSign, LayoutDashboard, Menu, X } from 'lucide-react'
-import AnimatedBackground from './AnimatedBackground'
 import NotificationBell from './NotificationBell'
 
 export default function Layout() {

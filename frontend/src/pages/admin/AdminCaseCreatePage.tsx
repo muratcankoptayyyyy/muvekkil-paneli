@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import api from '../../services/api'
-import { Briefcase, Save, ArrowLeft } from 'lucide-react'
+import { Save, ArrowLeft } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 export default function AdminCaseCreatePage() {

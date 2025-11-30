@@ -1,7 +1,16 @@
-from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, Enum as SQLEnum
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.core.database import Base
+import enum
+
+class TimelineEventType(str, enum.Enum):
+    HEARING = "HEARING"      # Duruşma
+    REPORT = "REPORT"        # Bilirkişi Raporu
+    DECISION = "DECISION"    # Karar (Ara karar, gerekçeli karar)
+    PAYMENT = "PAYMENT"      # Ödeme
+    DOCUMENT = "DOCUMENT"    # Evrak
+    GENERIC = "GENERIC"      # Diğer
 
 class TimelineEvent(Base):
     """Dava sürecindeki olayların kronolojik takibi için"""
@@ -10,6 +19,9 @@ class TimelineEvent(Base):
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String, nullable=False)
     description = Column(Text)
+    
+    event_type = Column(SQLEnum(TimelineEventType), default=TimelineEventType.GENERIC, nullable=False)
+    stage_id = Column(String, nullable=True) # Linked to a stage in Case.stages JSON
     
     event_date = Column(DateTime(timezone=True), nullable=False)
     

@@ -1,9 +1,7 @@
 import { useState } from 'react'
-import { useAuthStore } from '../store/authStore'
 import { 
   Bell, 
   Check, 
-  Trash2, 
   Calendar, 
   FileText, 
   CreditCard, 
@@ -14,14 +12,13 @@ import {
   Gavel
 } from 'lucide-react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { notificationService, Notification } from '../services/notification'
+import { notificationService } from '../services/notification'
 import { format } from 'date-fns'
 import { tr } from 'date-fns/locale'
 
 type NotificationFilterType = 'all' | 'case_update' | 'payment_update' | 'document_upload' | 'system'
 
 export default function NotificationsPage() {
-  const { user: _user } = useAuthStore()
   const queryClient = useQueryClient()
   const [selectedType, setSelectedType] = useState<NotificationFilterType>('all')
 

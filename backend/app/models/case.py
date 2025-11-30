@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, Enum as SQLEnum
+from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, Enum as SQLEnum, JSON
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.core.database import Base
@@ -33,6 +33,9 @@ class Case(Base):
     
     court_name = Column(String, nullable=True)
     file_number = Column(String, nullable=True)
+    
+    # Stages configuration for this case
+    stages = Column(JSON, nullable=True)
     
     # Client (User)
     client_id = Column(Integer, ForeignKey("users.id"), nullable=False)

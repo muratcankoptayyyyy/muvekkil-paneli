@@ -1,6 +1,6 @@
 import { Fragment, useState, useEffect } from 'react';
 import { Popover, Transition } from '@headlessui/react';
-import { Bell, Check, FileText, Gavel, CreditCard, Info } from 'lucide-react';
+import { Bell, FileText, Gavel, CreditCard, Info } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { notificationService, Notification } from '../services/notification';
 import { format } from 'date-fns';
@@ -10,7 +10,7 @@ import { useNavigate } from 'react-router-dom';
 export default function NotificationBell() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const [isOpen, setIsOpen] = useState(false);
+  const [, setIsOpen] = useState(false);
 
   // Bildirimleri getir
   const { data: notifications = [] } = useQuery({

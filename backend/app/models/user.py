@@ -22,6 +22,10 @@ class User(Base):
     tax_number = Column(String, unique=True, nullable=True)  # Kurumsal için
     company_name = Column(String, nullable=True)  # Kurumsal için
     
+    # Contact & Bank Info
+    address = Column(String, nullable=True)
+    bank_account_info = Column(String, nullable=True)  # IBAN etc.
+    
     user_type = Column(SQLEnum(UserType), nullable=False, default=UserType.INDIVIDUAL)
     is_active = Column(Boolean, default=True)
     is_verified = Column(Boolean, default=False)

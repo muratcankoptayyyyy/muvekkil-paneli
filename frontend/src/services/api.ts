@@ -7,7 +7,6 @@ import {
   Case, 
   CaseCreate, 
   CaseUpdate,
-  Document,
   TimelineEvent
 } from '../types'
 

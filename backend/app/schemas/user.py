@@ -33,6 +33,7 @@ class UserResponse(UserBase):
     is_active: bool
     is_verified: bool
     is_2fa_enabled: bool = False
+    must_change_password: bool = False
     created_at: datetime
     last_login: Optional[datetime] = None
     tc_kimlik: Optional[str] = None
@@ -43,6 +44,11 @@ class UserResponse(UserBase):
     
     class Config:
         from_attributes = True
+
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str = Field(..., min_length=8)
 
 # Auth Schemas
 class Token(BaseModel):

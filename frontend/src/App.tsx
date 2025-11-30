@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuthStore } from './store/authStore'
 import LoginPage from './pages/LoginPage'
+import ChangePasswordPage from './pages/ChangePasswordPage'
 import DashboardPage from './pages/DashboardPage'
 import CasesPage from './pages/CasesPage'
 import CaseDetailPage from './pages/CaseDetailPage'
@@ -19,6 +20,22 @@ import AdminCaseCreatePage from './pages/admin/AdminCaseCreatePage'
 import AdminDocumentsUploadPage from './pages/admin/AdminDocumentsUploadPage'
 import AdminPaymentsCreatePage from './pages/admin/AdminPaymentsCreatePage'
 
+// Protected Route component that checks for password change requirement
+function ProtectedRoute({ children, redirectTo = '/login' }: { children: React.ReactNode, redirectTo?: string }) {
+  const { isAuthenticated, user } = useAuthStore()
+  
+  if (!isAuthenticated) {
+    return <Navigate to={redirectTo} />
+  }
+  
+  // If user must change password, redirect to change password page
+  if (user?.must_change_password) {
+    return <Navigate to="/change-password" />
+  }
+  
+  return <>{children}</>
+}
+
 function App() {
   const { isAuthenticated, user } = useAuthStore()
 
@@ -28,37 +45,43 @@ function App() {
     <Routes>
       {/* Public routes */}
       <Route path="/login" element={<LoginPage />} />
+      
+      {/* Change password route - accessible only when authenticated */}
+      <Route 
+        path="/change-password" 
+        element={isAuthenticated ? <ChangePasswordPage /> : <Navigate to="/login" />} 
+      />
 
       {/* Admin routes */}
       {isAdmin && (
         <Route element={<Layout />}>
           <Route
             path="/admin/dashboard"
-            element={isAuthenticated ? <AdminDashboardPage /> : <Navigate to="/login" />}
+            element={<ProtectedRoute><AdminDashboardPage /></ProtectedRoute>}
           />
           <Route
             path="/admin/clients"
-            element={isAuthenticated ? <AdminClientsPage /> : <Navigate to="/login" />}
+            element={<ProtectedRoute><AdminClientsPage /></ProtectedRoute>}
           />
           <Route
             path="/admin/clients/new"
-            element={isAuthenticated ? <AdminClientCreatePage /> : <Navigate to="/login" />}
+            element={<ProtectedRoute><AdminClientCreatePage /></ProtectedRoute>}
           />
           <Route
             path="/admin/cases"
-            element={isAuthenticated ? <AdminCasesPage /> : <Navigate to="/login" />}
+            element={<ProtectedRoute><AdminCasesPage /></ProtectedRoute>}
           />
           <Route
             path="/admin/cases/new"
-            element={isAuthenticated ? <AdminCaseCreatePage /> : <Navigate to="/login" />}
+            element={<ProtectedRoute><AdminCaseCreatePage /></ProtectedRoute>}
           />
           <Route
             path="/admin/documents/upload"
-            element={isAuthenticated ? <AdminDocumentsUploadPage /> : <Navigate to="/login" />}
+            element={<ProtectedRoute><AdminDocumentsUploadPage /></ProtectedRoute>}
           />
           <Route
             path="/admin/payments/create"
-            element={isAuthenticated ? <AdminPaymentsCreatePage /> : <Navigate to="/login" />}
+            element={<ProtectedRoute><AdminPaymentsCreatePage /></ProtectedRoute>}
           />
         </Route>
       )}
@@ -67,31 +90,31 @@ function App() {
       <Route element={<Layout />}>
         <Route
           path="/dashboard"
-          element={isAuthenticated ? <DashboardPage /> : <Navigate to="/login" />}
+          element={<ProtectedRoute><DashboardPage /></ProtectedRoute>}
         />
         <Route
           path="/cases"
-          element={isAuthenticated ? <CasesPage /> : <Navigate to="/login" />}
+          element={<ProtectedRoute><CasesPage /></ProtectedRoute>}
         />
         <Route
           path="/cases/:id"
-          element={isAuthenticated ? <CaseDetailPage /> : <Navigate to="/login" />}
+          element={<ProtectedRoute><CaseDetailPage /></ProtectedRoute>}
         />
         <Route
           path="/documents"
-          element={isAuthenticated ? <DocumentsPage /> : <Navigate to="/login" />}
+          element={<ProtectedRoute><DocumentsPage /></ProtectedRoute>}
         />
         <Route
           path="/payments"
-          element={isAuthenticated ? <PaymentsPage /> : <Navigate to="/login" />}
+          element={<ProtectedRoute><PaymentsPage /></ProtectedRoute>}
         />
         <Route
           path="/notifications"
-          element={isAuthenticated ? <NotificationsPage /> : <Navigate to="/login" />}
+          element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>}
         />
         <Route
           path="/profile"
-          element={isAuthenticated ? <ProfilePage /> : <Navigate to="/login" />}
+          element={<ProtectedRoute><ProfilePage /></ProtectedRoute>}
         />
       </Route>
 

@@ -373,9 +373,24 @@ async def create_client(
              identifier = secrets.token_hex(4)
              client_in.email = f"no-email-{identifier}@system.local"
     
-    # Generate random password
+    # TC Kimlik veya Vergi No kontrolü
+    if client_in.tc_kimlik:
+        if db.query(User).filter(User.tc_kimlik == client_in.tc_kimlik).first():
+            raise HTTPException(
+                status_code=400,
+                detail="Bu TC Kimlik numarası zaten kayıtlı"
+            )
+    
+    if client_in.tax_number:
+        if db.query(User).filter(User.tax_number == client_in.tax_number).first():
+            raise HTTPException(
+                status_code=400,
+                detail="Bu Vergi Kimlik numarası zaten kayıtlı"
+            )
+    
+    # Generate temporary password (8 chars: letters + digits)
     alphabet = string.ascii_letters + string.digits
-    temp_password = ''.join(secrets.choice(alphabet) for i in range(10))
+    temp_password = ''.join(secrets.choice(alphabet) for i in range(8))
     hashed_password = get_password_hash(temp_password)
     
     user_data = client_in.model_dump()
@@ -383,7 +398,8 @@ async def create_client(
         **user_data,
         hashed_password=hashed_password,
         is_active=True,
-        is_verified=True # Admin created, so verified
+        is_verified=True,  # Admin created, so verified
+        must_change_password=True  # İlk girişte şifre değiştirmek zorunda
     )
     
     db.add(user)

@@ -34,6 +34,9 @@ class User(Base):
     totp_secret = Column(String, nullable=True)
     is_2fa_enabled = Column(Boolean, default=False)
     
+    # Password change requirement
+    must_change_password = Column(Boolean, default=False)
+    
     # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())

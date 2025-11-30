@@ -8,6 +8,7 @@ export interface User {
   is_active: boolean
   is_verified: boolean
   is_2fa_enabled: boolean
+  must_change_password: boolean
   created_at: string
   last_login?: string
   tc_kimlik?: string

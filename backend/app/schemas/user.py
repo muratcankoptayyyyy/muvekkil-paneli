@@ -28,8 +28,12 @@ class UserUpdate(BaseModel):
     address: Optional[str] = None
     bank_account_info: Optional[str] = None
 
-class UserResponse(UserBase):
+class UserResponse(BaseModel):
     id: int
+    email: str  # EmailStr yerine str - system.local gibi dummy email'ler için
+    full_name: str
+    phone: Optional[str] = None
+    user_type: UserType
     is_active: bool
     is_verified: bool
     is_2fa_enabled: bool = False

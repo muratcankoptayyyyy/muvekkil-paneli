@@ -364,14 +364,14 @@ async def create_client(
             )
     else:
         # Generate dummy email if not provided
-        # Format: no-email-{tc_or_tax_or_random}@system.local
+        # Format: no-email-{tc_or_tax_or_random}@noemail.koptay.av.tr
         identifier = client_in.tc_kimlik or client_in.tax_number or secrets.token_hex(4)
-        client_in.email = f"no-email-{identifier}@system.local"
+        client_in.email = f"no-email-{identifier}@noemail.koptay.av.tr"
         
         # Check if this dummy email exists (unlikely but possible)
         while db.query(User).filter(User.email == client_in.email).first():
              identifier = secrets.token_hex(4)
-             client_in.email = f"no-email-{identifier}@system.local"
+             client_in.email = f"no-email-{identifier}@noemail.koptay.av.tr"
     
     # TC Kimlik veya Vergi No kontrolü
     if client_in.tc_kimlik:

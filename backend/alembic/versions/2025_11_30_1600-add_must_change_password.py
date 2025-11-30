@@ -1,7 +1,7 @@
 """Add must_change_password field to users
 
 Revision ID: 2025_11_30_1600
-Revises: 2025_11_29_1500
+Revises: 1234567890ab
 Create Date: 2025-11-30 16:00:00.000000
 
 """
@@ -11,7 +11,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = '2025_11_30_1600'
-down_revision = '2025_11_29_1500'
+down_revision = '1234567890ab'
 branch_labels = None
 depends_on = None
 
